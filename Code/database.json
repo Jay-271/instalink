@@ -1,0 +1,291 @@
+{
+    "chat": [
+        {
+            "name": "Alice",
+            "contents": [
+                {
+                    "Zebra": {
+                        "messages": [
+                            {
+                                "owner": "Alice",
+                                "contents": "Hey Zebra, how's your day going?",
+                                "time": "2024-10-10T10:05:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "Hey Alice! It's going well, just busy with work. How about you?",
+                                "time": "2024-10-10T10:07:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Pretty good! Working on the quarterly presentation.",
+                                "time": "2024-10-10T10:10:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "Need any help with that?",
+                                "time": "2024-10-10T10:12:00"
+                            }
+                        ]
+                    },
+                    "Bob": {
+                        "messages": [
+                            {
+                                "owner": "Bob",
+                                "contents": "Hey Alice, have you finished the report?",
+                                "time": "2024-10-10T10:06:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Hey Bob, almost done! I'll send it over shortly.",
+                                "time": "2024-10-10T10:09:00"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "Great, thanks! Also, can you join the 2PM meeting?",
+                                "time": "2024-10-10T10:15:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Yes, I'll be there. Should I prepare anything?",
+                                "time": "2024-10-10T10:17:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Hey poolie bear",
+                                "time": "2024-10-22T22:23:37"
+                            }
+                        ]
+                    },
+                    "David": {
+                        "messages": [
+                            {
+                                "owner": "David",
+                                "contents": "Alice, got a minute to discuss the client feedback?",
+                                "time": "2024-10-10T11:05:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Sure, want to grab coffee and chat?",
+                                "time": "2024-10-10T11:07:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Hey david! leaving you a message first try!",
+                                "time": "2024-10-22T15:43:45"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bob",
+            "contents": [
+                {
+                    "Zebra": {
+                        "messages": [
+                            {
+                                "owner": "Bob",
+                                "contents": "Hey Zebra, have you finished the report?",
+                                "time": "2024-10-10T10:06:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "Hey Bob, almost done! I'll send it over shortly.",
+                                "time": "2024-10-10T10:09:00"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "Perfect, we need it for the client meeting",
+                                "time": "2024-10-10T10:12:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "Don't worry, it'll be ready well before then",
+                                "time": "2024-10-10T10:14:00"
+                            }
+                        ]
+                    },
+                    "Alice": {
+                        "messages": [
+                            {
+                                "owner": "Bob",
+                                "contents": "Hey Alice, have you finished the report?",
+                                "time": "2024-10-10T10:06:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Hey Bob, almost done! I'll send it over shortly.",
+                                "time": "2024-10-10T10:09:00"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "Great, thanks! Also, can you join the 2PM meeting?",
+                                "time": "2024-10-10T10:15:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Yes, I'll be there. Should I prepare anything?",
+                                "time": "2024-10-10T10:17:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Hey poolie bear",
+                                "time": "2024-10-22T22:23:37"
+                            }
+                        ]
+                    },
+                    "Eva": {
+                        "messages": [
+                            {
+                                "owner": "Eva",
+                                "contents": "Bob, can you review my code changes?",
+                                "time": "2024-10-10T11:30:00"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "Sure, I'll look at it after lunch",
+                                "time": "2024-10-10T11:32:00"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Charlie",
+            "contents": [
+                {
+                    "Zebra": {
+                        "messages": [
+                            {
+                                "owner": "Charlie",
+                                "contents": "Hey Zebra, are you free for lunch today?",
+                                "time": "2024-10-10T10:08:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "Hey Charlie! Yeah, I'm free around 12:30 PM. Does that work for you?",
+                                "time": "2024-10-10T10:10:00"
+                            },
+                            {
+                                "owner": "Charlie",
+                                "contents": "Perfect! Let's try that new place down the street",
+                                "time": "2024-10-10T10:12:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "Sounds good! Meet you in the lobby?",
+                                "time": "2024-10-10T10:15:00"
+                            }
+                        ]
+                    },
+                    "Bob": {
+                        "messages": [
+                            {
+                                "owner": "Bob",
+                                "contents": "Hey Charlie, have you finished the report?",
+                                "time": "2024-10-10T10:06:00"
+                            },
+                            {
+                                "owner": "Charlie",
+                                "contents": "Hey Bob, almost done! I'll send it over shortly.",
+                                "time": "2024-10-10T10:09:00"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "David",
+            "contents": [
+                {
+                    "Zebra": {
+                        "messages": [
+                            {
+                                "owner": "David",
+                                "contents": "Zebra, do you have the Q3 numbers?",
+                                "time": "2024-10-10T11:15:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "Yes, I'll share the spreadsheet with you",
+                                "time": "2024-10-10T11:17:00"
+                            }
+                        ]
+                    },
+                    "Eva": {
+                        "messages": [
+                            {
+                                "owner": "David",
+                                "contents": "Eva, how's the new feature coming along?",
+                                "time": "2024-10-10T11:45:00"
+                            },
+                            {
+                                "owner": "Eva",
+                                "contents": "Testing phase now, should be ready by EOD",
+                                "time": "2024-10-10T11:47:00"
+                            }
+                        ]
+                    },
+                    "Alice": {
+                        "messages": [
+                            {
+                                "owner": "David",
+                                "contents": "Alice, got a minute to discuss the client feedback?",
+                                "time": "2024-10-10T11:05:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Sure, want to grab coffee and chat?",
+                                "time": "2024-10-10T11:07:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Hey david! leaving you a message first try!",
+                                "time": "2024-10-22T15:43:45"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Eva",
+            "contents": [
+                {
+                    "Zebra": {
+                        "messages": [
+                            {
+                                "owner": "Eva",
+                                "contents": "Zebra, got time for a quick call?",
+                                "time": "2024-10-10T12:00:00"
+                            },
+                            {
+                                "owner": "Zebra",
+                                "contents": "In 15 minutes? Just finishing lunch",
+                                "time": "2024-10-10T12:02:00"
+                            }
+                        ]
+                    },
+                    "Alice": {
+                        "messages": [
+                            {
+                                "owner": "Eva",
+                                "contents": "Alice, the UI mockups are ready for review",
+                                "time": "2024-10-10T12:30:00"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "Great! I'll check them after the 2PM meeting",
+                                "time": "2024-10-10T12:32:00"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
