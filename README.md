@@ -5,7 +5,7 @@
 
 ## TO RUN:
 
-* Download ALL code from folder in repo
+* Download ALL code from folder `Code` in repo above
 
 > Open Terminal First, CD into directory where downloaded files are.
 * RUN `main.py` with `python3 main.py`
