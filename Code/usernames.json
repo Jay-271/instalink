@@ -1,0 +1,7 @@
+{
+    "users": {
+        "Alice": "password123",
+        "Bob": "securePass",
+        "Zebra": "zebra123"
+    }
+}
