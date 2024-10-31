@@ -1,5 +1,5 @@
-# Team Assignment: Personas, Scenarios, and Features
-- Originally used for ^
+# Team Assignments: Personas, Scenarios, and Features
+- Find this in the `wiki` section.
 
 # Main coding branch (since it has issues)
 
