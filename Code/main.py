@@ -1,7 +1,5 @@
 import socket
 import threading
-import json
-import os
 import logging
 import utils
 
@@ -26,7 +24,7 @@ MSG = "!MSG"
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(address)
 
-#Current Directory: /home/jay/Desktop/instalink/instalink/server
+database_lock = threading.Lock()
 
 #main thread per client connected, thinking of putting parts like login in a function but later ig
 def handle_client(conn, addr):
@@ -94,8 +92,8 @@ def handle_client(conn, addr):
                 conn.send(str(chats).encode(FORMAT))
             if MSG in msg:
                 #append chat data
-                utils.add_chat(curr_user, target_user, msg)
-                pass
+                with database_lock:
+                    utils.add_chat(curr_user, target_user, msg)
             #Logging purposes
             if msg:
                 logging.info(f"Got message: {msg}")

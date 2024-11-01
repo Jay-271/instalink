@@ -147,7 +147,7 @@ class ChatClientGUI:
         # Add message box
         self.message_entry = ttk.Entry(self.chat_frame, text="Message:", width=30)
         self.message_entry.grid(column=0, row=2, columnspan=2, sticky=(tk.W, tk.E))
-        ttk.Button(self.chat_frame, text="Send", command=lambda: self.send_message()).grid(column=1, row=3, sticky=tk.E)
+        ttk.Button(self.chat_frame, text="Send", command=lambda: self.threadding_wrapper(self.send_message)).grid(column=1, row=3, sticky=tk.E)
         
         # Configure grid stuff
         self.chat_frame.columnconfigure(0, weight=1)
@@ -209,6 +209,9 @@ class ChatClientGUI:
             except:
                 print("Connection closed.")
                 break
+    #basically pass func into and will execute on thread (can use this for everything tbh I shouldve made this sooner)
+    def threadding_wrapper(self, func):
+        threading.Thread(target=func, daemon=True).start()
     
     #this probably needs to run on a thread itself too
     def send_message(self):
