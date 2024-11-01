@@ -88,7 +88,9 @@ class ChatClientGUI:
             
             # Close the application
             self.master.destroy()
-                    
+    
+    
+    
     #Basically sets up login without connecting until time to.
     def create_widgets(self):
         self.master.img = PhotoImage(file='images/login.png')
@@ -118,9 +120,78 @@ class ChatClientGUI:
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=177)
         
         Button(self.main_frame, width=30, pady=7, text='Sign in', bg='#57a1f8', fg='white', border=0, command=self.login).place(x=25, y=204)
-        label = Label(self.main_frame, text="Don't have an account?", fg='black', bg='white', font=('Microsoft YaHei UI Light', 9))
-        label.place(x=75, y=270) ### this is WIP still 
+        self.no_acc_label = Label(self.main_frame, text="Don't have an account?", fg='black', bg='white', font=('Microsoft YaHei UI Light', 9))
+        self.no_acc_label.place(x=75, y=270) ### this is WIP still 
+        self.btn_sign_up = Button(self.main_frame, width=6, text='Sign up', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda: self.sign_up_page())
+        self.btn_sign_up.place(x=215, y=270)
+        
+    def sign_up_page(self):
+        self.clear_window()
+        self.master.img = PhotoImage(file='images/signup.png')
+        Label(self.master, image=self.master.img, bg='white').place(x=50, y=90)
+        
+        self.main_frame = Frame(self.master, width=350, height=390, bg='#fff')
+        self.main_frame.place(x=480, y=50)
+        
+        heading = Label(self.master, text='Sign up', fg='#57a1f8', bg='white', font=('Microsoft YaHei UI', 23, 'bold'))
+        heading.place(x=100, y=5)
+        
+        self.username_entry = Entry(self.main_frame, width=25, fg='black', bg='white', border=0, highlightthickness=0, font=('Microsoft YaHei UI', 11), insertbackground='black', insertwidth=2)
+        self.username_entry.place(x=30, y=80)
+        self.username_entry.insert(0, 'Username')
+        self.username_entry.bind('<FocusIn>', lambda e: self.username_entry.delete(0, 'end'))
+        self.username_entry.bind('<FocusOut>', lambda e: self.username_entry.insert(0, 'Username') if self.username_entry.get() == '' else None)
+        
+        Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=107)
+        self.password_entry = Entry(self.main_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
+        self.password_entry.place(x=30, y=150)
+        self.password_entry.insert(0, 'Password')
+        self.password_entry.bind('<FocusIn>', lambda e: self.on_enter_password(self.password_entry))
+        self.password_entry.bind('<FocusOut>', lambda e: self.on_leave_password(self.password_entry))
+        
+        Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=177)
+        self.confirm = Entry(self.main_frame, width=25, fg='black', bg='white', border=0, highlightthickness=0, font=('Microsoft YaHei UI', 11), insertbackground='black', insertwidth=2)
+        self.confirm.place(x=30, y=220)
+        self.confirm.insert(0, 'Confirm Password')
+        self.confirm.bind('<FocusIn>', lambda e: self.on_enter_password(self.confirm))
+        self.confirm.bind('<FocusOut>', lambda e: self.on_leave_confirm_password(self.confirm))
+        
+        Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=247)
+        Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='#57a1f8', border=0, command= lambda: self.signup(self.username_entry, self.password_entry, self.confirm)).place(x=35,y=280)
+        
+        self.some_label = Label(self.main_frame, text='I have an account', fg='#57a1f8', border=0, bd=0, highlightthickness=0,
+                highlightbackground='white', highlightcolor='white', relief='flat', bg='white',
+                font=('Microsoft YaHei UI', 9)).place(x=90,y=340)
+        self.master.bind('<Return>', lambda event: self.signup(self.username_entry, self.password_entry, self.confirm))
+        
+        signin = Button(self.main_frame, width=6, text='Sign in', border=0, bd=0, highlightthickness=0, highlightbackground='white',
+                    highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda : self.back_to_login())
+        signin.place(x=200, y=340)
+        
+    def signup(self, user, code, confirm_code):
+        username=self.username_entry.get()
+        password=self.password_entry.get()
+        confirm_password=self.confirm.get()
 
+        data = f"{username}|{password}"
+        return # Need to work on actually signing up (below code does not work but rough idea)
+        #No function yet to create acc
+        client_socket.send('CREATE ACCOUNT'.encode(FORMAT))
+
+        time.sleep(0.1)
+
+        if password==confirm_password:
+            client_socket.send(data.encode(FORMAT))
+
+            message = client_socket.recv(1024).decode(FORMAT)
+            if "Successful account creation" in message:
+                messagebox.showinfo("Signup", f"{message}")
+                login_page()
+            else:
+                messagebox.showerror("Error", f"{message}")
+        else:
+            messagebox.showerror("Error", "Passwords do not match")    
+    
     def on_enter_password(self, code):
         code.delete(0, 'end')
         code.config(show='*')
@@ -130,12 +201,24 @@ class ChatClientGUI:
         if name == '':
             code.config(show='')  # Show normal text if empty
             code.insert(0, 'Password')
+    def on_leave_confirm_password(self, code):
+        name = code.get()
+        if name == '':
+            code.config(show='')  # Show normal text if empty
+            code.insert(0, 'Confirm Password')
             
-    def clear_screen(self, event):
+    def clear_screen(self, event): #only used at beginning
         for widget in self.master.winfo_children():
             widget.destroy()
         self.master.unbind("<Key>")
         self.create_widgets()
+        
+    def back_to_login(self):
+        self.clear_window()
+        self.create_widgets()
+    def clear_window(self): #more generic version
+        for widget in self.master.winfo_children():
+            widget.destroy()
 
     def start_logo(self):
         Label(self.master, image=self.master.img, bg='white').place(x=250, y=50)
