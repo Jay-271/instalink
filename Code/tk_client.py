@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Label, PhotoImage, ttk, scrolledtext, messagebox
+from tkinter import Button, Entry, Frame, Label, PhotoImage, ttk, scrolledtext, messagebox
 import socket
 import threading
 import logging
@@ -57,26 +57,49 @@ class ChatClientGUI:
                     
     #Basically sets up login without connecting until time to.
     def create_widgets(self):
-        self.main_frame = ttk.Frame(self.master, padding="10")
-        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        self.master.columnconfigure(0, weight=1)
-        self.master.rowconfigure(0, weight=1)
+        self.master.img = PhotoImage(file='images/login.png')
+        Label(self.master, image=self.master.img, bg='white').place(x=50, y=50)
+        
+        self.main_frame = Frame(self.master, width=350, height=350, bg="white")
+        self.main_frame.place(x=480, y=70)
+
+        heading = Label(self.main_frame, text='Sign in', fg='#57a1f8', bg='white', font=('Microsoft YaHei UI Light', 23, 'bold'))
+        heading.place(x=100, y=5)
         
         # Login Frame
-        self.login_frame = ttk.Frame(self.main_frame, padding="10")
-        self.login_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        ttk.Label(self.login_frame, text="Username:").grid(column=0, row=0, sticky=tk.W)
-        self.username_entry = ttk.Entry(self.login_frame, width=30)
-        self.username_entry.grid(column=1, row=0, sticky=(tk.W, tk.E))
+        self.username_entry = Entry(self.main_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", highlightbackground='white', font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
+        self.username_entry.place(x=30, y=80)
+        self.username_entry.insert(0, 'Username')
+        self.username_entry.bind('<FocusIn>', lambda e: self.username_entry.delete(0, 'end'))
+        self.username_entry.bind('<FocusOut>', lambda e: self.username_entry.insert(0, 'Username') if self.username_entry.get() == '' else None)
+
+        Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=107)
+        self.password_entry = Entry(self.main_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
+        self.password_entry.place(x=30, y=150)
+        self.password_entry.insert(0, 'Password')
+        self.password_entry.bind('<FocusIn>', lambda e: self.on_enter_password(self.password_entry))
+        self.password_entry.bind('<FocusOut>', lambda e: self.on_leave_password(self.password_entry))
         
-        ttk.Label(self.login_frame, text="Password:").grid(column=0, row=1, sticky=tk.W)
-        self.password_entry = ttk.Entry(self.login_frame, width=30, show="*")
-        self.password_entry.grid(column=1, row=1, sticky=(tk.W, tk.E))
+        Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=177)
+        
+        Button(self.main_frame, width=30, pady=7, text='Sign in', bg='#57a1f8', fg='white', border=0, command=lambda: self.login).place(x=25,y=204)
+        label = Label(self.main_frame, text="Don't have an account?", fg='black', bg='white', font=('Microsoft YaHei UI Light', 9))
+        label.place(x=75, y=270)
+
         
         #sends the command to login function
-        ttk.Button(self.login_frame, text="Login", command=self.login).grid(column=1, row=2, sticky=tk.E)
-    
+        ttk.Button(self.main_frame, text="Login", command=self.login).grid(column=1, row=2, sticky=tk.E)
+    def on_enter_password(self, code):
+        code.delete(0, 'end')
+        code.config(show='*')
+        
+    def on_leave_password(self, code):
+        name = code.get()
+        if name == '':
+            code.config(show='')  # Show normal text if empty
+            code.insert(0, 'Password')
+            
     def clear_screen(self, event):
         for widget in self.master.winfo_children():
             widget.destroy()
