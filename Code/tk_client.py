@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import Label, PhotoImage, ttk, scrolledtext, messagebox
 import socket
 import threading
 import logging
@@ -27,15 +27,18 @@ class ChatClientGUI:
     #master = root method (main method of tkinter)
     def __init__(self, master):
         self.master = master
-        self.master.title("Instalink Client")
-        self.master.geometry("600x400")
+        self.master.title("Instalink")
+        self.master.geometry("925x500+300+200")
+        self.master.configure(bg="#fff")
+        self.master.resizable(False, False)
+        self.master.img = PhotoImage(file='images/Logo.png')
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing) #just inits first frame window and adds function for when clicking X
 
         self.history = set() #for history (needs to be modified later since it only gives and sends update to get history from server once (when you click button on chat name))
         self.client_socket = None
         self.username = "" #your userbane
         self.respond = "" #Auth (if logged in then this is the AUTH message gotten back from server, used in check for if AUTH in repsond...)
-        self.create_widgets() #init widgets
+        self.start_logo() #init widgets
     
     def on_closing(self):
         # Show a confirmation message box before closing
@@ -51,7 +54,7 @@ class ChatClientGUI:
             
             # Close the application
             self.master.destroy()
-
+                    
     #Basically sets up login without connecting until time to.
     def create_widgets(self):
         self.main_frame = ttk.Frame(self.master, padding="10")
@@ -73,7 +76,19 @@ class ChatClientGUI:
         
         #sends the command to login function
         ttk.Button(self.login_frame, text="Login", command=self.login).grid(column=1, row=2, sticky=tk.E)
-        
+    
+    def clear_screen(self, event):
+        for widget in self.master.winfo_children():
+            widget.destroy()
+        self.master.unbind("<Key>")
+        self.create_widgets()
+
+    def start_logo(self):
+        Label(self.master, image=self.master.img, bg='white').place(x=250, y=50)
+        heading = Label(self.master, text='InstaLink', fg='#7703fc', bg='white', font=('Microsoft YaHei UI Light', 30, 'bold'))
+        heading.place(x=375, y=5)
+        self.master.bind("<Key>", self.clear_screen)
+    
     #if here then gui for prev chats ran and it wants to get actual buttons where u click and go to talk to that person, currently no button to create new chat.
     def populate_chat_names(self):
         chat_names = self.prev_chats()
