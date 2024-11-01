@@ -83,13 +83,10 @@ class ChatClientGUI:
         
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=177)
         
-        Button(self.main_frame, width=30, pady=7, text='Sign in', bg='#57a1f8', fg='white', border=0, command=lambda: self.login).place(x=25,y=204)
+        Button(self.main_frame, width=30, pady=7, text='Sign in', bg='#57a1f8', fg='white', border=0, command=self.login).place(x=25, y=204)
         label = Label(self.main_frame, text="Don't have an account?", fg='black', bg='white', font=('Microsoft YaHei UI Light', 9))
-        label.place(x=75, y=270)
+        label.place(x=75, y=270) ### this is WIP still 
 
-        
-        #sends the command to login function
-        ttk.Button(self.main_frame, text="Login", command=self.login).grid(column=1, row=2, sticky=tk.E)
     def on_enter_password(self, code):
         code.delete(0, 'end')
         code.config(show='*')
@@ -208,7 +205,13 @@ class ChatClientGUI:
     def handle_auth(self): #need to make this somehow loop forever until AUTH response is returned but for now just sleep 2
         time.sleep(2)
         if AUTH_RESPONSE in self.respond:
-            self.login_frame.grid_remove()
+            for widget in self.master.winfo_children():
+                widget.destroy()
+            ### TODO This needs work:
+            self.main_frame = ttk.Frame(self.master, padding="10")
+            self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+            self.master.columnconfigure(0, weight=1)
+            self.master.rowconfigure(0, weight=1)
             threading.Thread(target=self.init_chat_area, daemon=True).start()
         else:
             messagebox.showerror("Authentication Error", "Invalid username or password")
