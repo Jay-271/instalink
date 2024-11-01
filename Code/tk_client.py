@@ -46,6 +46,8 @@ class ChatClientGUI:
         self.get_key()
         self.start_logo() #init widgets
     
+    # sending encrypted messages functionality
+    ########################################
     def get_key(self):
         try:
             with open("key/public.pem", 'rb') as f:
@@ -75,6 +77,7 @@ class ChatClientGUI:
         
         self.client_socket.recv(1024)  # Password prompt being eaten
         self.client_socket.send(self.encode(password))
+    #########################################################################
     
     def on_closing(self):
         # Show a confirmation message box before closing
@@ -89,27 +92,25 @@ class ChatClientGUI:
             # Close the application
             self.master.destroy()
     
-    
-    
     #Basically sets up login without connecting until time to.
     def create_widgets(self):
         self.master.img = PhotoImage(file='images/login.png')
         Label(self.master, image=self.master.img, bg='white').place(x=50, y=50)
         
-        self.main_frame = Frame(self.master, width=350, height=350, bg="white")
+        self.main_frame = Frame(self.master, width=350, height=350, bg="white") #frame for login
         self.main_frame.place(x=480, y=70)
 
         heading = Label(self.main_frame, text='Sign in', fg='#57a1f8', bg='white', font=('Microsoft YaHei UI Light', 23, 'bold'))
-        heading.place(x=100, y=5)
+        heading.place(x=100, y=5) #label with sign in text
         
-        # Login Frame
-        
+        #Entry for username field        
         self.username_entry = Entry(self.main_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", highlightbackground='white', font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
         self.username_entry.place(x=30, y=80)
         self.username_entry.insert(0, 'Username')
         self.username_entry.bind('<FocusIn>', lambda e: self.username_entry.delete(0, 'end'))
         self.username_entry.bind('<FocusOut>', lambda e: self.username_entry.insert(0, 'Username') if self.username_entry.get() == '' else None)
 
+        #new frame for password entry
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=107)
         self.password_entry = Entry(self.main_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
         self.password_entry.place(x=30, y=150)
@@ -117,31 +118,36 @@ class ChatClientGUI:
         self.password_entry.bind('<FocusIn>', lambda e: self.on_enter_password(self.password_entry))
         self.password_entry.bind('<FocusOut>', lambda e: self.on_leave_password(self.password_entry))
         
+        #new frame for button to sign in
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=177)
-        
         Button(self.main_frame, width=30, pady=7, text='Sign in', bg='#57a1f8', fg='white', border=0, command=self.login).place(x=25, y=204)
+        
+        #label + button for no acc page
         self.no_acc_label = Label(self.main_frame, text="Don't have an account?", fg='black', bg='white', font=('Microsoft YaHei UI Light', 9))
-        self.no_acc_label.place(x=75, y=270) ### this is WIP still 
+        self.no_acc_label.place(x=75, y=270) 
         self.btn_sign_up = Button(self.main_frame, width=6, text='Sign up', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda: self.sign_up_page())
         self.btn_sign_up.place(x=215, y=270)
         
     def sign_up_page(self):
+        #make sure its clear, load img
         self.clear_window()
         self.master.img = PhotoImage(file='images/signup.png')
         Label(self.master, image=self.master.img, bg='white').place(x=50, y=90)
         
+        #create frame + label with main sign up text
         self.main_frame = Frame(self.master, width=350, height=390, bg='#fff')
         self.main_frame.place(x=480, y=50)
-        
         heading = Label(self.master, text='Sign up', fg='#57a1f8', bg='white', font=('Microsoft YaHei UI', 23, 'bold'))
         heading.place(x=100, y=5)
         
+        #make new entry in same frame for username field
         self.username_entry = Entry(self.main_frame, width=25, fg='black', bg='white', border=0, highlightthickness=0, font=('Microsoft YaHei UI', 11), insertbackground='black', insertwidth=2)
         self.username_entry.place(x=30, y=80)
         self.username_entry.insert(0, 'Username')
         self.username_entry.bind('<FocusIn>', lambda e: self.username_entry.delete(0, 'end'))
         self.username_entry.bind('<FocusOut>', lambda e: self.username_entry.insert(0, 'Username') if self.username_entry.get() == '' else None)
         
+        #make new frame + entry for password
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=107)
         self.password_entry = Entry(self.main_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
         self.password_entry.place(x=30, y=150)
@@ -149,6 +155,7 @@ class ChatClientGUI:
         self.password_entry.bind('<FocusIn>', lambda e: self.on_enter_password(self.password_entry))
         self.password_entry.bind('<FocusOut>', lambda e: self.on_leave_password(self.password_entry))
         
+        #make new frame + confirm pass
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=177)
         self.confirm = Entry(self.main_frame, width=25, fg='black', bg='white', border=0, highlightthickness=0, font=('Microsoft YaHei UI', 11), insertbackground='black', insertwidth=2)
         self.confirm.place(x=30, y=220)
@@ -156,18 +163,17 @@ class ChatClientGUI:
         self.confirm.bind('<FocusIn>', lambda e: self.on_enter_password(self.confirm))
         self.confirm.bind('<FocusOut>', lambda e: self.on_leave_confirm_password(self.confirm))
         
+        #make new frame + button for new acc creation (TODO - actual functionality)
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=247)
         Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='#57a1f8', border=0, command= lambda: self.signup(self.username_entry, self.password_entry, self.confirm)).place(x=35,y=280)
         
-        self.some_label = Label(self.main_frame, text='I have an account', fg='#57a1f8', border=0, bd=0, highlightthickness=0,
-                highlightbackground='white', highlightcolor='white', relief='flat', bg='white',
-                font=('Microsoft YaHei UI', 9)).place(x=90,y=340)
+        #new label + button  to go back to login page
+        self.some_label = Label(self.main_frame, text='I have an account', fg='#57a1f8', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', font=('Microsoft YaHei UI', 9)).place(x=90,y=340)
         self.master.bind('<Return>', lambda event: self.signup(self.username_entry, self.password_entry, self.confirm))
-        
-        signin = Button(self.main_frame, width=6, text='Sign in', border=0, bd=0, highlightthickness=0, highlightbackground='white',
-                    highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda : self.back_to_login())
+        signin = Button(self.main_frame, width=6, text='Sign in', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda : self.back_to_login())
         signin.place(x=200, y=340)
         
+    #TODO actually sign in (missing server side too)
     def signup(self, user, code, confirm_code):
         username=self.username_entry.get()
         password=self.password_entry.get()
@@ -192,39 +198,51 @@ class ChatClientGUI:
         else:
             messagebox.showerror("Error", "Passwords do not match")    
     
+    ## Helper functions for login gui
+    ###########################################
+    
+    #asthetic
     def on_enter_password(self, code):
         code.delete(0, 'end')
-        code.config(show='*')
-        
+        code.config(show='*') 
+    #asthetic
     def on_leave_password(self, code):
         name = code.get()
         if name == '':
             code.config(show='')  # Show normal text if empty
             code.insert(0, 'Password')
+    #asthetic
     def on_leave_confirm_password(self, code):
         name = code.get()
         if name == '':
             code.config(show='')  # Show normal text if empty
             code.insert(0, 'Confirm Password')
-            
-    def clear_screen(self, event): #only used at beginning
+    
+    #only used at beginning (after pressing enter to remove main logo)
+    def clear_screen(self, event): 
         for widget in self.master.winfo_children():
             widget.destroy()
         self.master.unbind("<Key>")
         self.create_widgets()
-        
+    
+    #used by sign up page
     def back_to_login(self):
         self.clear_window()
         self.create_widgets()
-    def clear_window(self): #more generic version
+    
+    #more generic version of cleanup
+    def clear_window(self): 
         for widget in self.master.winfo_children():
             widget.destroy()
 
+    # basically start with logo, remove and actually start gui on any button key press
     def start_logo(self):
         Label(self.master, image=self.master.img, bg='white').place(x=250, y=50)
         heading = Label(self.master, text='InstaLink', fg='#7703fc', bg='white', font=('Microsoft YaHei UI Light', 30, 'bold'))
         heading.place(x=375, y=5)
         self.master.bind("<Key>", self.clear_screen)
+    ###########################################################
+    
     
     #if here then gui for prev chats ran and it wants to get actual buttons where u click and go to talk to that person, currently no button to create new chat.
     def populate_chat_names(self):
