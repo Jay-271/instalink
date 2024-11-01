@@ -5,6 +5,8 @@ import threading
 import logging
 import time
 import ast
+import rsa
+
 
 # Set up logging
 logging.basicConfig(
@@ -19,6 +21,7 @@ AUTH_RESPONSE = "!CONNECTED"
 HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 MSG = "!MSG"
+HEADER = 64
 
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 8000
@@ -26,6 +29,7 @@ PORT = 8000
 class ChatClientGUI:
     #master = root method (main method of tkinter)
     def __init__(self, master):
+        
         self.master = master
         self.master.title("Instalink")
         self.master.geometry("925x500+300+200")
@@ -33,21 +37,51 @@ class ChatClientGUI:
         self.master.resizable(False, False)
         self.master.img = PhotoImage(file='images/Logo.png')
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing) #just inits first frame window and adds function for when clicking X
-
+        
         self.history = set() #for history (needs to be modified later since it only gives and sends update to get history from server once (when you click button on chat name))
         self.client_socket = None
-        self.username = "" #your userbane
-        self.respond = "" #Auth (if logged in then this is the AUTH message gotten back from server, used in check for if AUTH in repsond...)
+        self.username = None #your userbane
+        self.respond = None #Auth (if logged in then this is the AUTH message gotten back from server, used in check for if AUTH in repsond...)
+        self.pub_key = None
+        self.get_key()
         self.start_logo() #init widgets
+    
+    def get_key(self):
+        try:
+            with open("key/public.pem", 'rb') as f:
+                self.pub_key = rsa.PublicKey.load_pkcs1(f.read())
+        except Exception as x:
+            logging.error("FATAL - Cannot continue without Public Key.\nClosing.")
+            self.master.destroy()
+    #Only for txt for now
+    def encode(self, msg):
+        assert isinstance(msg, str)
+        return rsa.encrypt(msg.encode(encoding="utf-8"), self.pub_key)
+    #Assuming you have a message to send to the server we can now use this wrapper function
+    def communicate(self, msg):
+        enc_msg = self.encode(msg)
+        enc_msg_len = len(enc_msg)
+        msg_length = str(enc_msg_len).encode(encoding="utf-8")
+        msg_length = msg_length.ljust(HEADER)
+        
+        self.client_socket.send(msg_length)
+        time.sleep(1)
+        self.client_socket.send(enc_msg)
+    ## A special version for sending password and username
+    def communicate_pass(self, password):
+        # Skip server prompts as we already have the username and password
+        self.client_socket.recv(1024)  # Username prompt being eaten
+        self.client_socket.send(self.encode(self.username))
+        
+        self.client_socket.recv(1024)  # Password prompt being eaten
+        self.client_socket.send(self.encode(password))
     
     def on_closing(self):
         # Show a confirmation message box before closing
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             if self.client_socket:
                 try:
-                    self.client_socket.send(str(len(DISCONNECT_MESSAGE)).encode('utf-8'))
-                    time.sleep(1)
-                    self.client_socket.send(DISCONNECT_MESSAGE.encode('utf-8'))
+                    self.communicate(DISCONNECT_MESSAGE)
                     self.client_socket.close()
                 except Exception as e:
                     logging.error(f"Error closing socket: {e}")
@@ -122,10 +156,8 @@ class ChatClientGUI:
             
     def prev_chats(self):
         payload = f"{ALL_CHATS},{self.username}"
-        payload_len = len(payload)
-        self.client_socket.send(str(payload_len).encode('utf-8'))
-        time.sleep(1)
-        self.client_socket.send(payload.encode('utf-8'))
+        
+        self.communicate(payload)        
         message = self.client_socket.recv(1024).decode('utf-8')
         if message and message is not None:
             return ast.literal_eval(message)
@@ -190,15 +222,9 @@ class ChatClientGUI:
 
     #this is a thread
     def login_logic(self, password):
-        self.client_socket.send(str(len(LOGIN_MESSAGE)).encode('utf-8'))
-        time.sleep(1)
-        self.client_socket.send(LOGIN_MESSAGE.encode('utf-8'))
         
-        # Skip server prompts as we already have the username and password
-        self.client_socket.recv(1024)  # Username prompt
-        self.client_socket.send(self.username.encode('utf-8'))
-        self.client_socket.recv(1024)  # Password prompt
-        self.client_socket.send(password.encode('utf-8'))
+        self.communicate(LOGIN_MESSAGE)
+        self.communicate_pass(password=password)
         
         respond = self.client_socket.recv(1024).decode('utf-8')
         self.respond = respond
@@ -263,14 +289,12 @@ class ChatClientGUI:
 
         # Send the message
         full_message = f"{MSG},{message}"
-        self.client_socket.send(str(len(full_message)).encode('utf-8'))
+        self.communicate(full_message)
         #insert to canvas, server handles history itself
         self.chat_area.insert(tk.END, f"\n{message}")
         self.chat_area.see(tk.END)
         #chill
         time.sleep(1)
-        #send msg to server
-        self.client_socket.send(full_message.encode('utf-8'))
         self.message_entry.delete(0, tk.END)
 
     #if here called from button function just gets history from server
@@ -278,10 +302,7 @@ class ChatClientGUI:
         if target in self.history:
             return
         payload = f"{HISTORY_MESSAGE},{self.username},{target}"
-        payload_len = len(payload)
-        self.client_socket.send(str(payload_len).encode('utf-8'))
-        time.sleep(1)
-        self.client_socket.send(payload.encode('utf-8'))
+        self.communicate(payload)
         self.history.add(target)
 
 def main():
@@ -291,3 +312,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
