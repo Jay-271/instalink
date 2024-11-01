@@ -21,6 +21,7 @@ AUTH_RESPONSE = "!CONNECTED"
 HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 MSG = "!MSG"
+FORMAT = "utf-8"
 HEADER = 64
 
 HOST = socket.gethostbyname(socket.gethostname())
@@ -58,12 +59,12 @@ class ChatClientGUI:
     #Only for txt for now
     def encode(self, msg):
         assert isinstance(msg, str)
-        return rsa.encrypt(msg.encode(encoding="utf-8"), self.pub_key)
+        return rsa.encrypt(msg.encode(encoding=FORMAT), self.pub_key)
     #Assuming you have a message to send to the server we can now use this wrapper function
     def communicate(self, msg):
         enc_msg = self.encode(msg)
         enc_msg_len = len(enc_msg)
-        msg_length = str(enc_msg_len).encode(encoding="utf-8")
+        msg_length = str(enc_msg_len).encode(encoding=FORMAT)
         msg_length = msg_length.ljust(HEADER)
         
         self.client_socket.send(msg_length)
@@ -259,7 +260,7 @@ class ChatClientGUI:
         payload = f"{ALL_CHATS},{self.username}"
         
         self.communicate(payload)        
-        message = self.client_socket.recv(1024).decode('utf-8')
+        message = self.client_socket.recv(1024).decode(FORMAT)
         if message and message is not None:
             return ast.literal_eval(message)
     
@@ -327,7 +328,7 @@ class ChatClientGUI:
         self.communicate(LOGIN_MESSAGE)
         self.communicate_pass(password=password)
         
-        respond = self.client_socket.recv(1024).decode('utf-8')
+        respond = self.client_socket.recv(1024).decode(FORMAT)
         self.respond = respond
     def handle_auth(self): #need to make this somehow loop forever until AUTH response is returned but for now just sleep 2
         time.sleep(2)
@@ -370,7 +371,7 @@ class ChatClientGUI:
     def receive_messages_chat_area(self):
         while True:
             try:
-                message = self.client_socket.recv(1024).decode('utf-8')
+                message = self.client_socket.recv(1024).decode(FORMAT)
                 if message and message is not None:
                     self.chat_area.insert(tk.END, f"\n{message}")
                     self.chat_area.see(tk.END)
