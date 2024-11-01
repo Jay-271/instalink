@@ -4,6 +4,10 @@
 # Main coding branch (since it has issues)
 
 ## TO RUN:
+PLEASE install and run RSA in python. As its a single library there shouldn't be any errors installing globally, only warnings. However, if you'd like your glboal env to not be messed with please make a venv first. The command to run is:
+> python -m pip install rsa
+
+**Note** The Private key is NEEDED to be added to `/code/key/` folder alongisde the public key. The .gitignore has been added with ignoring the private key. Please do not upload the private key to the repo.
 
 * Download ALL code from folder `Code` in repo above
 

@@ -2,6 +2,7 @@ import socket
 import threading
 import logging
 import utils
+import rsa
 
 # Set up logging
 logging.basicConfig(
@@ -34,17 +35,32 @@ def handle_client(conn, addr):
     target_user = ""
     curr_user = ""
     
+    
+    try:
+        with open("key/private.pem", 'rb') as f:
+            private_key = rsa.PrivateKey.load_pkcs1(f.read())
+    except Exception as x:
+        logging.error("FATAL - Cannot continue without private Key.\nClosing.")
+        logging.info("Closing socket connection")
+        conn.close()
+        return -1
+    
     while connected:
-        msg_length = conn.recv(HEADER).decode(FORMAT)
+        msg_length_data = conn.recv(HEADER)
+        msg_length = msg_length_data.decode(FORMAT).strip()  
+        
         logging.info(f"msg_length is {msg_length}")
         if msg_length and msg_length.isdigit():
             msg_length = int(msg_length)
-            msg = conn.recv(msg_length).decode(FORMAT)
+            msg = conn.recv(msg_length) # REMOVE decode here since its RSAed
             #logging.info(f"inside msg_length if and statement where msg is {msg}")
-            
             if not msg:
                 logging.info("No message")
                 continue
+            
+            # Decode first:
+            msg = rsa.decrypt(msg, private_key).decode(FORMAT)
+            
             ###Check message type
             if DISCONNECT_MESSAGE in msg:
                 logging.info("got disconnect message, breaking from loop")
@@ -59,9 +75,9 @@ def handle_client(conn, addr):
                     # Ask client for their username and password
                     try:
                         conn.send("Enter your username: ".encode(FORMAT))
-                        username = conn.recv(1024).decode(FORMAT)
+                        username = rsa.decrypt(conn.recv(1024), private_key).decode(FORMAT)
                         conn.send("Enter your password: ".encode(FORMAT))
-                        password = conn.recv(1024).decode(FORMAT)
+                        password =rsa.decrypt(conn.recv(1024), private_key).decode(FORMAT)
                         if not utils.authenticate(username, password):
                             print(f"Invalid Credentials or user {username} does not exist.")
                             break
