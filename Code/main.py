@@ -20,6 +20,7 @@ LOGIN_MESSAGE = "!LOGIN"
 AUTH_RESPONSE = "!CONNECTED"
 HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
+CREATE_ACC = "!CREATE_ACCOUNT"
 MSG = "!MSG"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,7 +68,15 @@ def handle_client(conn, addr):
                 break
             ###Logging in stuff here
             if not LOGGED_IN:
-                if msg != LOGIN_MESSAGE:
+                if CREATE_ACC in msg: #if u wanna create acc
+                    with database_lock:
+                        _, new_user, new_pass, new_pass2 = msg.split(',')
+                        message = utils.add_account(new_user, new_pass, new_pass2)
+                    conn.send(message.encode(FORMAT))
+                    conn.close()
+                    print("Exiting thread.")
+                    return
+                elif msg != LOGIN_MESSAGE: #if you sent something weird like tryin to access server functions without being logged in...
                     logging.error("Not logged in.")
                     break
                 else:
@@ -109,7 +118,7 @@ def handle_client(conn, addr):
             if MSG in msg:
                 #append chat data
                 with database_lock:
-                    utils.add_chat(curr_user, target_user, msg)
+                    utils.add_chat(curr_user, target_user, msg)    
             #Logging purposes
             if msg:
                 logging.info(f"Got message: {msg}")

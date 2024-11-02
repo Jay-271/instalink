@@ -21,6 +21,8 @@ AUTH_RESPONSE = "!CONNECTED"
 HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 MSG = "!MSG"
+CREATE_ACC = "!CREATE_ACCOUNT"
+FORMAT = "utf-8"
 HEADER = 64
 
 HOST = socket.gethostbyname(socket.gethostname())
@@ -58,12 +60,12 @@ class ChatClientGUI:
     #Only for txt for now
     def encode(self, msg):
         assert isinstance(msg, str)
-        return rsa.encrypt(msg.encode(encoding="utf-8"), self.pub_key)
+        return rsa.encrypt(msg.encode(encoding=FORMAT), self.pub_key)
     #Assuming you have a message to send to the server we can now use this wrapper function
     def communicate(self, msg):
         enc_msg = self.encode(msg)
         enc_msg_len = len(enc_msg)
-        msg_length = str(enc_msg_len).encode(encoding="utf-8")
+        msg_length = str(enc_msg_len).encode(encoding=FORMAT)
         msg_length = msg_length.ljust(HEADER)
         
         self.client_socket.send(msg_length)
@@ -77,6 +79,17 @@ class ChatClientGUI:
         
         self.client_socket.recv(1024)  # Password prompt being eaten
         self.client_socket.send(self.encode(password))
+    
+    def communicate_newacc(self, msg):
+        enc_msg = self.encode(msg)
+        enc_msg_len = len(enc_msg)
+        msg_length = str(enc_msg_len).encode(encoding=FORMAT)
+        msg_length = msg_length.ljust(HEADER)
+        
+        self.client_socket.send(msg_length)
+        time.sleep(1)
+        self.client_socket.send(enc_msg)
+        return self.client_socket.recv(1024)
     #########################################################################
     
     def on_closing(self):
@@ -170,29 +183,29 @@ class ChatClientGUI:
         #new label + button  to go back to login page
         self.some_label = Label(self.main_frame, text='I have an account', fg='#57a1f8', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', font=('Microsoft YaHei UI', 9)).place(x=90,y=340)
         self.master.bind('<Return>', lambda event: self.signup(self.username_entry, self.password_entry, self.confirm))
-        signin = Button(self.main_frame, width=6, text='Sign in', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda : self.back_to_login())
+        signin = Button(self.main_frame, width=6, text='Sign in', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda : self.signup(self.username_entry,self.password_entry,self.confirm))
         signin.place(x=200, y=340)
         
-    #TODO actually sign in (missing server side too)
     def signup(self, user, code, confirm_code):
         username=self.username_entry.get()
         password=self.password_entry.get()
         confirm_password=self.confirm.get()
 
-        data = f"{username}|{password}"
-        return # Need to work on actually signing up (below code does not work but rough idea)
-        #No function yet to create acc
-        client_socket.send('CREATE ACCOUNT'.encode(FORMAT))
-
-        time.sleep(0.1)
+        data = f"{CREATE_ACC},{username},{password},{confirm_password}"
 
         if password==confirm_password:
-            client_socket.send(data.encode(FORMAT))
-
-            message = client_socket.recv(1024).decode(FORMAT)
+            ###Create socket to connect temp:
+            self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                self.client_socket.connect((HOST, PORT))
+            except Exception as e:
+                messagebox.showerror("Connection Error", f"Unable to connect to server: {e}")
+                return
+            message = self.communicate_newacc(data).decode(FORMAT)
+            self.client_socket.close()
             if "Successful account creation" in message:
                 messagebox.showinfo("Signup", f"{message}")
-                login_page()
+                self.back_to_login()
             else:
                 messagebox.showerror("Error", f"{message}")
         else:
@@ -259,7 +272,7 @@ class ChatClientGUI:
         payload = f"{ALL_CHATS},{self.username}"
         
         self.communicate(payload)        
-        message = self.client_socket.recv(1024).decode('utf-8')
+        message = self.client_socket.recv(1024).decode(FORMAT)
         if message and message is not None:
             return ast.literal_eval(message)
     
@@ -327,7 +340,7 @@ class ChatClientGUI:
         self.communicate(LOGIN_MESSAGE)
         self.communicate_pass(password=password)
         
-        respond = self.client_socket.recv(1024).decode('utf-8')
+        respond = self.client_socket.recv(1024).decode(FORMAT)
         self.respond = respond
     def handle_auth(self): #need to make this somehow loop forever until AUTH response is returned but for now just sleep 2
         time.sleep(2)
@@ -370,7 +383,7 @@ class ChatClientGUI:
     def receive_messages_chat_area(self):
         while True:
             try:
-                message = self.client_socket.recv(1024).decode('utf-8')
+                message = self.client_socket.recv(1024).decode(FORMAT)
                 if message and message is not None:
                     self.chat_area.insert(tk.END, f"\n{message}")
                     self.chat_area.see(tk.END)
