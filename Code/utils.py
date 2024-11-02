@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 import copy
+import re
 
 
 def get_current_datetime():
@@ -89,6 +90,7 @@ def display_chat_history(history):
 #returns chats for current user only (no data attatched)
 def get_chats_only(username):
     c_name = username
+    work = None
     with open('database.json', 'r') as db:
         try:
             data = json.load(db)
@@ -98,7 +100,7 @@ def get_chats_only(username):
                 # Check if the current participant's name matches c_name
                 if participant['name'] == c_name:
                     work = participant['contents']
-                    break;
+                    break
         except FileNotFoundError:
             print("Error: The file 'database.json' was not found.")
             return None
@@ -108,7 +110,7 @@ def get_chats_only(username):
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
             return None
-    if not work: #no chat history for current user
+    if work is None: #no chat history for current user
         return None
     
     list_of_names = [name for name in work[0]]
@@ -177,10 +179,44 @@ def add_chats_helper(username, new_chats):
             return None
         except FileNotFoundError:
             print("Error: The file 'database.json' was not found.")
-            return None
+            return "Internal error -1"
         except json.JSONDecodeError:
             print("Error: The file is not a valid JSON.")
-            return None
+            return "Internal error -2"
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
-            return None
+            return "Internal error -3"
+def add_account(username, password, c_pass):
+    if password != c_pass:
+        return "Error confirming passwords."
+    
+    pattern = r'^[a-zA-Z1-9]+$'
+    try:
+        if not re.match(pattern, username):
+            raise ValueError("Error: Username must only contain letters a-z, A-Z, and digits 1-9.")
+    except Exception as e:
+        return e
+    
+    with open('usernames.json', 'r+') as db:
+        try:
+            users = json.load(db)
+            if username not in users['users']:
+                users['users'][username] = password
+                db.seek(0)
+                json.dump(users, db, indent=4)  # actually writes
+                db.truncate()  # Truncate the file if leftvoers
+                print("Successfully added new user.")
+            else:
+                return "Username not available. Please try again"
+            # If no matching name is found, return None
+            return "Successful account creation."
+        except FileNotFoundError:
+            print("Error: The file 'database.json' was not found.")
+            return "Internal error -1"
+        except json.JSONDecodeError:
+            print("Error: The file is not a valid JSON.")
+            return "Internal error -2"
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return "Internal error -3"
+
