@@ -193,9 +193,9 @@ def add_account(username, password, c_pass):
     pattern = r'^[a-zA-Z1-9]+$'
     try:
         if not re.match(pattern, username):
-            raise ValueError("Error: Username must only contain letters a-z, A-Z, and digits 1-9.")
+            raise Exception("Error: Username must only contain letters a-z, A-Z, and digits 1-9.")
     except Exception as e:
-        return e
+        return str(e)
     
     with open('usernames.json', 'r+') as db:
         try:
