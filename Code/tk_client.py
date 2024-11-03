@@ -95,7 +95,7 @@ class ChatClientGUI:
     def on_closing(self):
         # Show a confirmation message box before closing
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
-            if self.client_socket:
+            if self.client_socket and self.client_socket.fileno() != -1: # returns positive int if socket open, else -1
                 try:
                     self.communicate(DISCONNECT_MESSAGE)
                     self.client_socket.close()
@@ -133,7 +133,8 @@ class ChatClientGUI:
         
         #new frame for button to sign in
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=177)
-        Button(self.main_frame, width=30, pady=7, text='Sign in', bg='#57a1f8', fg='white', border=0, command=self.login).place(x=25, y=204)
+        self.sign_in_button = Button(self.main_frame, width=30, pady=7, text='Sign in', bg='#57a1f8', fg='white', border=0, command=self.login)
+        self.sign_in_button.place(x=25, y=204)
         
         #label + button for no acc page
         self.no_acc_label = Label(self.main_frame, text="Don't have an account?", fg='black', bg='white', font=('Microsoft YaHei UI Light', 9))
@@ -178,15 +179,19 @@ class ChatClientGUI:
         
         #make new frame + button for new acc creation (TODO - actual functionality)
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=247)
-        Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='#57a1f8', border=0, command= lambda: self.signup(self.username_entry, self.password_entry, self.confirm)).place(x=35,y=280)
+        self.new_acc_btn = Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='#57a1f8', border=0, command= lambda: self.signup())
+        self.new_acc_btn.place(x=35,y=280)
         
         #new label + button  to go back to login page
         self.some_label = Label(self.main_frame, text='I have an account', fg='#57a1f8', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', font=('Microsoft YaHei UI', 9)).place(x=90,y=340)
-        self.master.bind('<Return>', lambda event: self.signup(self.username_entry, self.password_entry, self.confirm))
-        signin = Button(self.main_frame, width=6, text='Sign in', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda : self.signup(self.username_entry,self.password_entry,self.confirm))
-        signin.place(x=200, y=340)
+        self.master.bind('<Return>', lambda event: self.signup())
+        self.back_to_login_btn = Button(self.main_frame, width=6, text='Sign in', border=0, bd=0, highlightthickness=0, highlightbackground='white', highlightcolor='white', relief='flat', bg='white', fg='#57a1f8', command=lambda : self.back_to_login())
+        self.back_to_login_btn.place(x=200, y=340)
         
-    def signup(self, user, code, confirm_code):
+    def signup(self):
+        #if clicked once diable until done.
+        self.new_acc_btn.config(state='disabled')
+        
         username=self.username_entry.get()
         password=self.password_entry.get()
         confirm_password=self.confirm.get()
@@ -201,16 +206,20 @@ class ChatClientGUI:
             except Exception as e:
                 messagebox.showerror("Connection Error", f"Unable to connect to server: {e}")
                 return
+            
             message = self.communicate_newacc(data).decode(FORMAT)
             self.client_socket.close()
             if "Successful account creation" in message:
                 messagebox.showinfo("Signup", f"{message}")
+                if self.new_acc_btn and self.new_acc_btn.winfo_exists():
+                    self.new_acc_btn.config(state='normal')
                 self.back_to_login()
             else:
                 messagebox.showerror("Error", f"{message}")
         else:
             messagebox.showerror("Error", "Passwords do not match")    
-    
+        if self.new_acc_btn and self.new_acc_btn.winfo_exists():
+                    self.new_acc_btn.config(state='normal')
     ## Helper functions for login gui
     ###########################################
     
@@ -355,10 +364,13 @@ class ChatClientGUI:
             threading.Thread(target=self.init_chat_area, daemon=True).start()
         else:
             messagebox.showerror("Authentication Error", "Invalid username or password")
+            if self.sign_in_button and self.sign_in_button.winfo_exists():  # Check if the button still exists
+                self.master.after(0, lambda: self.sign_in_button.config(state='normal'))
             self.client_socket.close()
     
     #if here then button was clicked to login, handle using threads for no GUI freezing. (tbh idk what happens if you spam click the login button but don't do that)
     def login(self):
+        self.sign_in_button.config(state='disabled')
         self.username = self.username_entry.get()
         password = self.password_entry.get()
         
