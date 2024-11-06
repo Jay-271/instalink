@@ -120,8 +120,16 @@ def get_chats_only(username):
 #adds chat to right part in JSON file with use of helper function
 def add_chat(username, target_name, message):
     #check if msg history exists first for that person
-    _, message = message.split(",")
-
+    pattern = r'^!(.*?)~<>~\{(.*)$'
+    try:
+        match = re.match(pattern, message)
+        if not match:
+            raise Exception("Error: Invalid message")
+        message = match.group(2) 
+    except Exception as e:
+        return print(e)
+    print("message was: " + message)
+    
     chats = get_chats(username)
     chats2 =   get_chats(target_name)
     #print(f"username: {username}\ntarget: {target_name}")
@@ -241,7 +249,16 @@ def add_account(username, password, c_pass):
 
 def send_update_target(curr_user, target_user, msg, client_dict):
     #check if client connected on opposite end, if so send message... how?
+    pattern = r'^!(.*?)~<>~\{(.*)$'
+    try:
+        match = re.match(pattern, msg)
+        if not match:
+            raise Exception("Error: Invalid message")
+        msg = match.group(2) 
+    except Exception as e:
+        return print(e)
+    
     if not target_user in client_dict:
         return
-    client_dict[target_user]['connection'].send(f"{target_user}: {msg}".encode('utf-8')) #use their socket since we know it exists to send them amessage just as we would before. 
+    client_dict[target_user]['connection'].send(f"{curr_user}: {msg}\n".encode('utf-8')) #use their socket since we know it exists to send them amessage just as we would before. 
     return

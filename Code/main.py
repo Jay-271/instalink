@@ -33,7 +33,6 @@ database_lock = threading.Lock()
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
     LOGGED_IN = False
-    IN_CHAT_AREA = False
     connected = True
     target_user = "" #Variables set as soon as history is made (aka button to chat between current user and reciever is clicked)
     curr_user = "" #Therefore we can assume still same user being messaged and will never be null (i hope?)
@@ -108,14 +107,15 @@ def handle_client(conn, addr):
             #If here then then client still connected
             if HISTORY_MESSAGE in msg:
                 logging.info("getting history")
-                history = utils.get_chat_history(msg)
+                with database_lock:
+                    history = utils.get_chat_history(msg)
                 _, curr_user, target_user = msg.split(',')
                 if history is None:
                     #no previous chat history
                     continue
                 for dm in history:
                     conn.send(f"{dm['owner']}: {dm['contents']}\n".encode(FORMAT))
-                IN_CHAT_AREA = True #only update this here since i know from client code only in chat area if history message between user and sender
+                connected_clients[username]['chat_area']  = True #only update this here since i know from client code only in chat area if history message between user and sender
             if ALL_CHATS in msg:
                 _, username = msg.split(',')
                 chats = utils.get_chats_only(username)
@@ -127,7 +127,7 @@ def handle_client(conn, addr):
                 #append chat data
                 with username_lock:
                     utils.add_chat(curr_user, target_user, msg)
-                if IN_CHAT_AREA:
+                if connected_clients[username]['chat_area']:
                     utils.send_update_target(curr_user, target_user, msg, connected_clients) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
             #Logging purposes
             if msg:
@@ -135,7 +135,8 @@ def handle_client(conn, addr):
 
     logging.info("Closing socket connection")
     conn.close()
-    del connected_clients[username] # Not active anymore
+    if curr_user in connected_clients:
+        del connected_clients[username] # Not active anymore
     logging.info("Returning...")
     return
 
