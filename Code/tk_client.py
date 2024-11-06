@@ -383,6 +383,8 @@ class ChatClientGUI:
             self.client_socket.connect((HOST, PORT))
         except Exception as e:
             messagebox.showerror("Connection Error", f"Unable to connect to server: {e}")
+            if self.sign_in_button and self.sign_in_button.winfo_exists():  # Check if the button still exists
+                self.master.after(0, lambda: self.sign_in_button.config(state='normal'))
             return
         
         login_thread = threading.Thread(target=self.login_logic, args=(password,), daemon=True)
@@ -414,11 +416,12 @@ class ChatClientGUI:
             logging.info(f"got message: {message}")
             return
 
+        pattern = """~<>~{"""
         # Send the message
-        full_message = f"{MSG},{message}"
+        full_message = f"{MSG}{pattern}{message}"
         self.communicate(full_message)
         #insert to canvas, server handles history itself
-        self.chat_area.insert(tk.END, f"{self.username}: {message}")
+        self.chat_area.insert(tk.END, f"{self.username}: {message}\n")
         self.chat_area.see(tk.END)
         self.message_entry.delete(0, tk.END)
 
