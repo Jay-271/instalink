@@ -244,4 +244,4 @@ def send_update_target(curr_user, target_user, msg, client_dict):
     if not target_user in client_dict:
         return
     client_dict[target_user]['connection'].send(f"{target_user}: {msg}".encode('utf-8')) #use their socket since we know it exists to send them amessage just as we would before. 
-    pass
+    return
