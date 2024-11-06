@@ -64,6 +64,21 @@
                                 "owner": "Alice",
                                 "contents": "BECAUSE IT DOESNT... i need a protocol that gives update then inserts",
                                 "time": "2024-11-06T13:31:49"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "First test if it works first try imma cry",
+                                "time": "2024-11-06T14:04:35"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "ALCEI THIS GOTTA WoRk",
+                                "time": "2024-11-06T14:05:51"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "OMG IT WORKED?",
+                                "time": "2024-11-06T14:06:11"
                             }
                         ]
                     },
@@ -158,6 +173,21 @@
                                 "owner": "Alice",
                                 "contents": "BECAUSE IT DOESNT... i need a protocol that gives update then inserts",
                                 "time": "2024-11-06T13:31:49"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "First test if it works first try imma cry",
+                                "time": "2024-11-06T14:04:35"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "ALCEI THIS GOTTA WoRk",
+                                "time": "2024-11-06T14:05:51"
+                            },
+                            {
+                                "owner": "Bob",
+                                "contents": "OMG IT WORKED?",
+                                "time": "2024-11-06T14:06:11"
                             }
                         ]
                     },
