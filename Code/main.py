@@ -26,15 +26,17 @@ MSG = "!MSG"
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(address)
 
+username_lock = threading.Lock() #locks for write/read db
 database_lock = threading.Lock()
 
 #main thread per client connected, thinking of putting parts like login in a function but later ig
 def handle_client(conn, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
     LOGGED_IN = False
+    IN_CHAT_AREA = False
     connected = True
-    target_user = ""
-    curr_user = ""
+    target_user = "" #Variables set as soon as history is made (aka button to chat between current user and reciever is clicked)
+    curr_user = "" #Therefore we can assume still same user being messaged and will never be null (i hope?)
     
     
     try:
@@ -92,6 +94,11 @@ def handle_client(conn, addr):
                             break
                         conn.send(AUTH_RESPONSE.encode(FORMAT))
                         LOGGED_IN = True
+                        connected_clients[username] = {
+                            'ip': addr[0],
+                            'port': addr[1],
+                            'connection': conn
+                        }
                         print(f"{username} connected.")
                         continue
                     except Exception as e:
@@ -107,7 +114,8 @@ def handle_client(conn, addr):
                     #no previous chat history
                     continue
                 for dm in history:
-                    conn.send(f"User: {dm['owner']}\nMessage: {dm['contents']}\n".encode(FORMAT))
+                    conn.send(f"{dm['owner']}: {dm['contents']}\n".encode(FORMAT))
+                IN_CHAT_AREA = True #only update this here since i know from client code only in chat area if history message between user and sender
             if ALL_CHATS in msg:
                 _, username = msg.split(',')
                 chats = utils.get_chats_only(username)
@@ -117,17 +125,22 @@ def handle_client(conn, addr):
                 conn.send(str(chats).encode(FORMAT))
             if MSG in msg:
                 #append chat data
-                with database_lock:
-                    utils.add_chat(curr_user, target_user, msg)    
+                with username_lock:
+                    utils.add_chat(curr_user, target_user, msg)
+                if IN_CHAT_AREA:
+                    utils.send_update_target(curr_user, target_user, msg, connected_clients) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
             #Logging purposes
             if msg:
                 logging.info(f"Got message: {msg}")
 
     logging.info("Closing socket connection")
     conn.close()
+    del connected_clients[username] # Not active anymore
     logging.info("Returning...")
     return
 
+
+connected_clients = {} # For storing active clients.
 
 def start():
     print(f"[LISTENING] Server is listening on {server_ip}")

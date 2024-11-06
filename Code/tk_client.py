@@ -396,9 +396,10 @@ class ChatClientGUI:
         while True:
             try:
                 message = self.client_socket.recv(1024).decode(FORMAT)
-                if message and message is not None:
-                    self.chat_area.insert(tk.END, f"\n{message}")
+                if message and message is not None: # get history/listener that inserts into chat frame area
+                    self.chat_area.insert(tk.END, f"{message}")
                     self.chat_area.see(tk.END)
+                    pass
             except:
                 print("Connection closed.")
                 break
@@ -417,10 +418,8 @@ class ChatClientGUI:
         full_message = f"{MSG},{message}"
         self.communicate(full_message)
         #insert to canvas, server handles history itself
-        self.chat_area.insert(tk.END, f"\n{message}")
+        self.chat_area.insert(tk.END, f"{self.username}: {message}")
         self.chat_area.see(tk.END)
-        #chill
-        time.sleep(1)
         self.message_entry.delete(0, tk.END)
 
     #if here called from button function just gets history from server
