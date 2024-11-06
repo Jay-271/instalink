@@ -107,7 +107,7 @@ def handle_client(conn, addr):
                     #no previous chat history
                     continue
                 for dm in history:
-                    conn.send(f"User: {dm['owner']}\nMessage: {dm['contents']}\n".encode(FORMAT))
+                    conn.send(f"{dm['owner']}: {dm['contents']}\n".encode(FORMAT))
             if ALL_CHATS in msg:
                 _, username = msg.split(',')
                 chats = utils.get_chats_only(username)

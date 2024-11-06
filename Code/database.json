@@ -54,6 +54,16 @@
                                 "owner": "Alice",
                                 "contents": "Hey poolie bear",
                                 "time": "2024-10-22T22:23:37"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "yeah ngl I have no idea how this inserts back from the server",
+                                "time": "2024-11-06T13:29:04"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "BECAUSE IT DOESNT... i need a protocol that gives update then inserts",
+                                "time": "2024-11-06T13:31:49"
                             }
                         ]
                     },
@@ -138,6 +148,16 @@
                                 "owner": "Alice",
                                 "contents": "Hey poolie bear",
                                 "time": "2024-10-22T22:23:37"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "yeah ngl I have no idea how this inserts back from the server",
+                                "time": "2024-11-06T13:29:04"
+                            },
+                            {
+                                "owner": "Alice",
+                                "contents": "BECAUSE IT DOESNT... i need a protocol that gives update then inserts",
+                                "time": "2024-11-06T13:31:49"
                             }
                         ]
                     },

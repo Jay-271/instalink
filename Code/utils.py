@@ -116,6 +116,7 @@ def get_chats_only(username):
     list_of_names = [name for name in work[0]]
     return list_of_names
 
+#TODO Fix the below...
 #adds chat to right part in JSON file with use of helper function
 def add_chat(username, target_name, message):
     #check if msg history exists first for that person
@@ -124,39 +125,57 @@ def add_chat(username, target_name, message):
     chats = get_chats(username)
     chats2 =   get_chats(target_name)
     #print(f"username: {username}\ntarget: {target_name}")
-    if not chats:
-        print(f"No chats for {message}")
-        return None
 
-    # chats = [{'Zebra': {'messages': [{'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}, {'contents': 'All good here, just working.', 'time': '2024-10-10T10:10:00'}]}}]
-    # chats[0] = {'Zebra': {'messages': [{'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}
-    #ls = []
-    for chat in chats:
-        #print(f"chat var: {chat}")
-        #{'Zebra': {'messages': [{'owner': 'Alice', 'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}, {'owner': 'Zebra', 'contents': 'All good here, just working.', 'time': '2024-10-10T10:10:00'}]}}
-        if target_name not in chat:
-            #if chat history doesnt exist (idk how you will get here for rn)
-            chat[target_name] = {'messages': [{'owner': username, 'contents': message, 'time': get_current_datetime()}]}
-            return
-        if chat[target_name] is not None and chat[target_name]:
-            #{'Zebra': {'messages': [{'owner': 'Alice', 'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}, {'owner': 'Zebra', 'contents': 'All good here, just working.', 'time': '2024-10-10T10:10:00'}]}}
-            history = chat[target_name]['messages']
-            #[{'owner': 'Alice', 'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}, {'owner': 'Zebra', 'contents': 'All good here, just working.', 'time': '2024-10-10T10:10:00'}]
-            history.append({'owner': username, 'contents': message, 'time': get_current_datetime()})
-            break
-    add_chats_helper(username=username, new_chats=chats)
-
-    ###The above adds chats on one side, lets do the other for updating both chat arrays so when loading loads right:
-    for chat in chats2:
-        if username not in chat:
-            #if chat history doesnt exist (idk how you will get here for rn)
+    if not chats: #if user 1 dont have history append
+        print(f"No chats for {message}, making new chat")
+        chat[target_name] = {'messages': [{'owner': username, 'contents': message, 'time': get_current_datetime()}]}
+        add_chats_helper(username=username, new_chats=chat) #done for side 1
+        if not chats2: #if other dude also does not have history
+            print(f"No chats for {message}, creating new chat?")
             chat[username] = {'messages': [{'owner': username, 'contents': message, 'time': get_current_datetime()}]}
-            return
-        if chat[username] is not None and chat[username]:
-            history = chat[username]['messages']
-            history.append({'owner': username, 'contents': message, 'time': get_current_datetime()})
-            break
-    add_chats_helper(username=target_name, new_chats=chats2)
+            add_chats_helper(username=target_name, new_chats=chat) #Done for side 2 if no chats and only here if both were null
+        else: #if other dude DOES have history AND first dude no history
+            for chat in chats2:
+                if username not in chat:
+                    #if chat history doesnt exist (idk how you will get here for rn)
+                    chat[username] = {'messages': [{'owner': username, 'contents': message, 'time': get_current_datetime()}]}
+                    return
+                if chat[username] is not None and chat[username]:
+                    history = chat[username]['messages']
+                    history.append({'owner': username, 'contents': message, 'time': get_current_datetime()})
+                    break
+            add_chats_helper(username=target_name, new_chats=chats2) # if here other dude had chat already and was not deleted
+    else: #IF first dude DOES have history
+        for chat in chats:
+            #print(f"chat var: {chat}")
+            #{'Zebra': {'messages': [{'owner': 'Alice', 'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}, {'owner': 'Zebra', 'contents': 'All good here, just working.', 'time': '2024-10-10T10:10:00'}]}}
+            if target_name not in chat:
+                chat[target_name] = {'messages': [{'owner': username, 'contents': message, 'time': get_current_datetime()}]}
+                return
+            if chat[target_name] is not None and chat[target_name]:
+                #{'Zebra': {'messages': [{'owner': 'Alice', 'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}, {'owner': 'Zebra', 'contents': 'All good here, just working.', 'time': '2024-10-10T10:10:00'}]}}
+                history = chat[target_name]['messages']
+                #[{'owner': 'Alice', 'contents': 'Whats cookin?', 'time': '2024-10-10T10:05:00'}, {'owner': 'Zebra', 'contents': 'All good here, just working.', 'time': '2024-10-10T10:10:00'}]
+                history.append({'owner': username, 'contents': message, 'time': get_current_datetime()})
+                break
+        add_chats_helper(username=username, new_chats=chats)
+        if not chats2: #if other dude has no history AND first dude DID have history
+            print(f"No chats for {message}, creating new chat?")
+            chat[username] = {'messages': [{'owner': username, 'contents': message, 'time': get_current_datetime()}]}
+            add_chats_helper(username=target_name, new_chats=chat) #Done for side 2 if no chats and only here if both were null
+        else: #if history exists for both 
+            for chat in chats2:
+                if username not in chat:
+                    #if chat history doesnt exist (idk how you will get here for rn)
+                    chat[username] = {'messages': [{'owner': username, 'contents': message, 'time': get_current_datetime()}]}
+                    return
+                if chat[username] is not None and chat[username]:
+                    history = chat[username]['messages']
+                    history.append({'owner': username, 'contents': message, 'time': get_current_datetime()})
+                    break
+            add_chats_helper(username=target_name, new_chats=chats2)
+            return 
+
     
 def add_chats_helper(username, new_chats):
     c_name = username
