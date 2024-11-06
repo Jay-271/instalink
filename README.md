@@ -21,3 +21,11 @@ PLEASE install and run RSA in python. As its a single library there shouldn't be
     - TO EXIT just click the X in the GUI.
 
 > Note there may be errors, if so shoot Jason a msg on teams or make an issue.
+
+## TODO:
+
+- Just so I (Jason) Don't forget: Fix (well not fix but will be good to) add a JSON in between people. What I mean is:
+
+Currently -> WHOLE messages DB is replaced by new version using a lock when anyone sends any message to any user -> but this is innefecient. 
+
+Need something (Maybe make new JSON temp db for a specific chat between users then simply append those chats?), etc.
