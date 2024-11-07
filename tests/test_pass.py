@@ -1,4 +1,9 @@
 import rsa
 import pytest
-print("Passed imports...")
-pass
+from Code import main
+
+@pytest.fixture(scope="module")
+def test_imports():
+    print("Passed imports...")
+    assert rsa 
+    assert main
