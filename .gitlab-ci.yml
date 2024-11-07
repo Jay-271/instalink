@@ -1,0 +1,11 @@
+# .gitlab-ci.yml
+stages:
+  - test
+
+test-job:
+  stage: test
+  image: python:3.12  # Use a Python Docker image 
+  before_script:
+    - pip install -r requirements.txt  # Install dependencies
+  script:
+    - pytest tests/
