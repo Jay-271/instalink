@@ -29,3 +29,22 @@ PLEASE install and run RSA in python. As its a single library there shouldn't be
 Currently -> WHOLE messages DB is replaced by new version using a lock when anyone sends any message to any user -> but this is innefecient. 
 
 Need something (Maybe make new JSON temp db for a specific chat between users then simply append those chats?), etc.
+
+- There is also the issue with "knowing" when the client(s) are chatting with each other. Currently it follows this pattern:
+    - We "know" client is in a specifc chat area because of the !HiSTORY (user1), (user2) and sets their own flag of in chat area to true
+    - When 2 people, say Alice and Bob are in each other's chat area, we check this server side by going into the dictionary of all clients.
+    From Alice POV:
+    ```py
+    if dictionary['bob']['in_chat_area_flag'] is true:
+        #check from alice pov if Bob is in chat area
+        #save chat to server
+        #then send message to bob using bob's socket -> why? because client side there is a thread already appending to chat area.
+    ```
+    From Bob POV:
+    ```py
+    if dictionary['Alice']['in_chat_area_flag'] is true:
+        #check from Bob pov if Alice is in chat area
+        #save chat to server
+        #then send message to alice using her own socket -> why? because client side there is a thread already appending to chat area.
+    ```
+Currently, there is no logic for when they exit and checking they are inside the chat area itself is also a "grey flag". Maybe we can have Client tell us "I'm in the chat area server" and the server THEN updates the flag?
