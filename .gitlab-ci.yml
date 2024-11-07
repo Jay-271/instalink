@@ -1,0 +1,19 @@
+# .gitlab-ci.yml
+stages:
+  - test
+
+test-job:
+  stage: test
+  image: python:3.12  # Use a Python Docker image 
+  before_script:
+    - python -m pip install --upgrade pip 
+    - pip install -r requirements.txt  # Install dependencies
+    - export PYTHONPATH=$PYTHONPATH:$CI_PROJECT_DIR/Code
+  script:
+    - pytest tests/test_pass.py
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  timeout: 5 minutes
