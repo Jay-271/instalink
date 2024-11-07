@@ -1,10 +1,12 @@
 # tests/test_server.py
+import os
 import threading
 import time
 import pytest
 from io import StringIO
 from contextlib import redirect_stdout
 from Code import main
+import signal
 
 @pytest.fixture(scope="module")
 def start_server():
@@ -29,15 +31,8 @@ def start_server():
             'buffer': buf,
             'thread': server_thread
         }
-        main.shutdown_flag.set()
-        # Create dummy connection to unblock accept(), similar to main server function checking
-        try:
-            import socket
-            dummy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            dummy.connect((main.server_ip, main.server_port))
-            dummy.close()
-        except:
-            pass
+        # Send CTRL+C signal instead of flag setting.
+        os.kill(os.getpid(), signal.SIGINT)
         
         # Wait for server to shutdown
         time.sleep(2)
@@ -49,10 +44,6 @@ def test_server_startup_and_shutdown(start_server):
         "Server should print the start message"
     assert "[LISTENING] Server is listening on" in start_server['startup_output'], \
         "Server should indicate it is listening"
-    
-    # Set shutdown flag and wait briefly
-    main.shutdown_flag.set()
-    time.sleep(1)
     
     # Get final output
     shutdown_output = start_server['buffer'].getvalue()
