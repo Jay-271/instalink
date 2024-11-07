@@ -1,3 +1,4 @@
+##Note this completely doesnt work for som reason it doesnt stop I tried :( THEREFORE for now, skipping...
 import socket
 import threading
 import time
