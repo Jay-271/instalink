@@ -44,6 +44,8 @@ def test_server_startup_and_shutdown(start_server):
         "Server should print the start message"
     assert "[LISTENING] Server is listening on" in start_server['startup_output'], \
         "Server should indicate it is listening"
+    os.kill(os.getpid(), signal.SIGINT)
+    time.sleep(2)
     
     # Get final output
     shutdown_output = start_server['buffer'].getvalue()
