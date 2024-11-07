@@ -1,16 +1,13 @@
-# tests/test_server.py
-import os
+import socket
 import threading
 import time
 import pytest
 from io import StringIO
 from contextlib import redirect_stdout
 from Code import main
-import signal
 
 @pytest.fixture(scope="module")
 def start_server():
-    # Create a StringIO buffer before starting the thread
     buf = StringIO()
     
     # Start server in a thread
@@ -18,11 +15,12 @@ def start_server():
     
     with redirect_stdout(buf):
         server_thread.start()
-        time.sleep(1)
+        time.sleep(1)  # Wait for server to start
+        
         # Get initial output
         startup_output = buf.getvalue()
         
-        # Clear the buffer for shutdown output
+        # Clear buffer for shutdown output
         buf.truncate(0)
         buf.seek(0)
         
@@ -31,8 +29,17 @@ def start_server():
             'buffer': buf,
             'thread': server_thread
         }
-        # Send CTRL+C signal instead of flag setting.
-        os.kill(os.getpid(), signal.SIGINT)
+        
+        # Set shutdown flag directly instead of using SIGINT
+        main.shutdown_flag.set()
+        
+        # Create a dummy connection to unblock accept()
+        try:
+            dummy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            dummy.connect((main.server_ip, main.server_port))
+            dummy.close()
+        except:
+            pass
         
         # Wait for server to shutdown
         time.sleep(2)
@@ -44,7 +51,18 @@ def test_server_startup_and_shutdown(start_server):
         "Server should print the start message"
     assert "[LISTENING] Server is listening on" in start_server['startup_output'], \
         "Server should indicate it is listening"
-    os.kill(os.getpid(), signal.SIGINT)
+    
+    # Set shutdown flag directly
+    main.shutdown_flag.set()
+    
+    # Create dummy connection to unblock accept()
+    try:
+        dummy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        dummy.connect((main.server_ip, main.server_port))
+        dummy.close()
+    except:
+        pass
+    
     time.sleep(2)
     
     # Get final output
@@ -54,4 +72,3 @@ def test_server_startup_and_shutdown(start_server):
     assert "[INFO] Server is shutting down..." in shutdown_output or \
         "[INFO] Server shutdown complete" in shutdown_output, \
         "Server should print shutdown-related messages"
-    

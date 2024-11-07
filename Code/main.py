@@ -4,7 +4,6 @@ import logging
 import utils
 import rsa
 import signal #stopping with CTRL + C
-import sys # ^
 import select # ^
 
 # Set up logging

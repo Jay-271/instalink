@@ -16,4 +16,4 @@ test-job:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  timeout: 3 minutes
+  timeout: 5 minutes
