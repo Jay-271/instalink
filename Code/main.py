@@ -179,7 +179,7 @@ def start():
     while not shutdown_flag.is_set():
         try:
             # Use select to make accept() interruptible
-            ready = select.select([server], [], [], 1.0)  # 1 second timeout
+            ready = select.select([server], [], [], 1.0)  # 1 second timeout -> Check bottom
             if ready[0]:
                 conn, addr = server.accept()
                 if shutdown_flag.is_set():  # check flag again after timeout
@@ -198,3 +198,34 @@ def start():
 print("[STARTING] server is starting...")
 start()
 
+###### Additional Comments:
+### FOR CODE ### 
+# ready = select.select([server], [], [], 1.0)
+# ----
+# wait up to 1 sec to see if `server` has any data ready to read
+# - select.select() checks list of sockets to see if they're ready for something (shown below)
+# - first list ([server]) is sockets we wanna check for *read readiness*
+# - second list ([]) is for sockets we wanna check for *write readiness* (not using here)
+# - third list ([]) is for sockets we wanna check for *errors* (also not using here)
+# - last part (1.0) is timeout in seconds:
+#      * if `server` is ready in 1 sec, `ready` will have `[server]`
+#      * if not, `ready` will just be empty `[]`
+# lets us check for data without getting stuck waiting forever
+# What data???? CTRL + C 
+# https://docs.python.org/3/library/select.html
+# ----
+
+### FOR FUNCTION ### signal_handler 
+# ---- 
+# Handle CTRL+C shutdown for the server
+# - Print a message to let us know shutdown started
+# - Set the shutdown flag to signal other parts of the server to stop
+# - Close each client connection in connected_clients:
+#   - For each client, try to close the connection
+#   - Ignore any errors (e.g., if client already disconnected)
+#   - Clear out connected_clients to remove references to closed connections
+# - Create a dummy connection to the server:
+#   - This is to "wake up" the server if it's stuck in accept() waiting for a connection
+#   - Connect and immediately close the dummy socket to unblock the server's accept() call
+# - This whole function ensures the server shuts down cleanly and frees up resources
+# ----
