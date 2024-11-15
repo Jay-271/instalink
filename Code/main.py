@@ -24,6 +24,7 @@ HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 CREATE_ACC = "!CREATE_ACCOUNT"
 MSG = "!MSG"
+CLEAR_OUT_MSG_AREA = "!CLEAR_OUT_MSG_AREA"
 APPEND_CHAT_AREA = """!~<>~{""" #THIS IS NOT REGEX, we use REGEX CHECK to check for this
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -139,6 +140,8 @@ def handle_client(conn, addr):
                         if connected_clients[username]['chat_area']:
                             utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
                         continue  #socket was closed beforehand
+                    if CLEAR_OUT_MSG_AREA in msg:
+                        connected_clients[username]['chat_area']  = False
                     #Logging purposes
                     if msg:
                         logging.info(f"Got message: {msg}")
