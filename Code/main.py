@@ -24,6 +24,7 @@ HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 CREATE_ACC = "!CREATE_ACCOUNT"
 MSG = "!MSG"
+APPEND_CHAT_AREA = """!~<>~{""" #THIS IS NOT REGEX, we use REGEX CHECK to check for this
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(address)
@@ -57,7 +58,7 @@ def handle_client(conn, addr):
                 msg_length_data = conn.recv(HEADER)
                 msg_length = msg_length_data.decode(FORMAT).strip()  
                 
-                logging.info(f"msg_length is {msg_length}")
+                logging.info(f"[NEW MESSAGE] - msg_length is {msg_length}")
                 if msg_length and msg_length.isdigit():
                     msg_length = int(msg_length)
                     msg = conn.recv(msg_length) # REMOVE decode here since its RSAed
@@ -120,7 +121,8 @@ def handle_client(conn, addr):
                             #no previous chat history
                             continue
                         for dm in history:
-                            conn.send(f"{dm['owner']}: {dm['contents']}\n".encode(FORMAT))
+                            conn.send(f"{APPEND_CHAT_AREA}{dm['owner']}: {dm['contents']}\n".encode(FORMAT)) #New protocol to append if in chat area
+                            print(f"sending: {APPEND_CHAT_AREA}{dm['owner']}: {dm['contents']}\n")
                         connected_clients[username]['chat_area']  = True #only update this here since i know from client code only in chat area if history message between user and sender
                     if ALL_CHATS in msg:
                         _, username = msg.split(',')
@@ -129,12 +131,14 @@ def handle_client(conn, addr):
                         if chats is None:
                             conn.send("None".encode(FORMAT))
                         conn.send(str(chats).encode(FORMAT))
+                        print(f"sending: {chats}")
                     if MSG in msg:
                         #append chat data
                         with username_lock:
                             utils.add_chat(curr_user, target_user, msg)
                         if connected_clients[username]['chat_area']:
-                            utils.send_update_target(curr_user, target_user, msg, connected_clients) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                            utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                        continue  #socket was closed beforehand
                     #Logging purposes
                     if msg:
                         logging.info(f"Got message: {msg}")

@@ -247,18 +247,20 @@ def add_account(username, password, c_pass):
             print(f"An unexpected error occurred: {e}")
             return "Internal error -3"
 
-def send_update_target(curr_user, target_user, msg, client_dict):
+def send_update_target(curr_user, target_user, msg, client_dict, APPEND_CHAT_AREA):
     #check if client connected on opposite end, if so send message... how?
     pattern = r'^!(.*?)~<>~\{(.*)$'
     try:
+        print(f"Currently matching -> {msg}")
         match = re.match(pattern, msg)
         if not match:
             raise Exception("Error: Invalid message")
+        print(f"Matched!")
         msg = match.group(2) 
     except Exception as e:
         return print(e)
     
     if not target_user in client_dict:
         return
-    client_dict[target_user]['connection'].send(f"{curr_user}: {msg}\n".encode('utf-8')) #use their socket since we know it exists to send them amessage just as we would before. 
+    client_dict[target_user]['connection'].send(f"{APPEND_CHAT_AREA}{curr_user}: {msg}\n".encode('utf-8')) #use their socket since we know it exists to send them amessage just as we would before. 
     return

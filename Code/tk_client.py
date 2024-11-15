@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 from tkinter import Button, Entry, Frame, Label, PhotoImage, ttk, scrolledtext, messagebox
 import socket
@@ -6,7 +7,7 @@ import logging
 import time
 import ast
 import rsa
-
+import os
 
 # Set up logging
 logging.basicConfig(
@@ -22,6 +23,7 @@ HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 MSG = "!MSG"
 CREATE_ACC = "!CREATE_ACCOUNT"
+APPEND_CHAT_AREA = """!~<>~{"""
 FORMAT = "utf-8"
 HEADER = 64
 
@@ -31,15 +33,20 @@ PORT = 8000
 class ChatClientGUI:
     #master = root method (main method of tkinter)
     def __init__(self, master):
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
+        image_path = os.path.join(script_dir, "images", "Logo.png")
         
         self.master = master
         self.master.title("Instalink")
         self.master.geometry("925x500+300+200")
         self.master.configure(bg="#fff")
         self.master.resizable(False, False)
-        self.master.img = PhotoImage(file='images/Logo.png')
+        self.master.img = PhotoImage(file=image_path)
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing) #just inits first frame window and adds function for when clicking X
         
+        self.sending_message_event = None
+        self.sending_msg_event2 = None
+        self.state = [] #stack used to store states to return.
         self.history = set() #for history (needs to be modified later since it only gives and sends update to get history from server once (when you click button on chat name))
         self.client_socket = None
         self.username = None #your userbane
@@ -51,8 +58,11 @@ class ChatClientGUI:
     # sending encrypted messages functionality
     ########################################
     def get_key(self):
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
+        key_path = os.path.join(script_dir, "key", "public.pem")
+
         try:
-            with open("key/public.pem", 'rb') as f:
+            with open(key_path, 'rb') as f:
                 self.pub_key = rsa.PublicKey.load_pkcs1(f.read())
         except Exception as x:
             logging.error("FATAL - Cannot continue without Public Key.\nClosing.")
@@ -69,7 +79,7 @@ class ChatClientGUI:
         msg_length = msg_length.ljust(HEADER)
         
         self.client_socket.send(msg_length)
-        time.sleep(1)
+        time.sleep(.5)
         self.client_socket.send(enc_msg)
     ## A special version for sending password and username
     def communicate_pass(self, password):
@@ -107,7 +117,10 @@ class ChatClientGUI:
     
     #Basically sets up login without connecting until time to.
     def create_widgets(self):
-        self.master.img = PhotoImage(file='images/login.png')
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
+        image_path = os.path.join(script_dir, "images", "login.png")
+        
+        self.master.img = PhotoImage(file=image_path)
         Label(self.master, image=self.master.img, bg='white').place(x=50, y=50)
         
         self.main_frame = Frame(self.master, width=350, height=350, bg="white") #frame for login
@@ -145,7 +158,9 @@ class ChatClientGUI:
     def sign_up_page(self):
         #make sure its clear, load img
         self.clear_window()
-        self.master.img = PhotoImage(file='images/signup.png')
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
+        image_path = os.path.join(script_dir, "images", "signup.png")
+        self.master.img = PhotoImage(file=image_path)
         Label(self.master, image=self.master.img, bg='white').place(x=50, y=90)
         
         #create frame + label with main sign up text
@@ -256,6 +271,8 @@ class ChatClientGUI:
     def clear_window(self): 
         for widget in self.master.winfo_children():
             widget.destroy()
+            if hasattr(self, 'canvas') and self.canvas.winfo_exists():
+                self.canvas.delete("all")  # Clear all items from the canvas
 
     # basically start with logo, remove and actually start gui on any button key press
     def start_logo(self):
@@ -268,9 +285,11 @@ class ChatClientGUI:
     
     #if here then gui for prev chats ran and it wants to get actual buttons where u click and go to talk to that person, currently no button to create new chat.
     def populate_chat_names(self):
+        logging.info("Getting names for buttons...")
         chat_names = self.prev_chats()
         if not chat_names:
             return None
+        logging.info("Appending chat names to buttons...")
         #print(type(chat_names))
         #print(chat_names)
         for idx, chat_name in enumerate(chat_names):
@@ -279,19 +298,30 @@ class ChatClientGUI:
             
     def prev_chats(self):
         payload = f"{ALL_CHATS},{self.username}"
-        
-        self.communicate(payload)        
+        logging.info(f"Sent {payload}")
+
+        self.communicate(payload)     
         message = self.client_socket.recv(1024).decode(FORMAT)
+        logging.info(f"Got chats_only back: {message}")
         if message and message is not None:
             return ast.literal_eval(message)
     
     #if here then succesfful login, clear frame from before and make new one of all chat history (that we may have to change?)
     def init_chat_area(self):
         # All Messages frame
+        if not self.state:
+            self.state.append("chat_area")
+        self.main_frame = ttk.Frame(self.master, padding="10")
+        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.master.columnconfigure(0, weight=1)
+        self.master.rowconfigure(0, weight=1)
+        logging.info("Configured main frame")
+        
         self.users_area_frame = ttk.Frame(self.main_frame, padding="10")
         self.users_area_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.users_area_frame.columnconfigure(0, weight=1)
         self.users_area_frame.rowconfigure(0, weight=1)
+        logging.info("configured user area frame")
         
         ttk.Label(self.users_area_frame, text="Past Chats").grid(row=0, column=0, sticky=(tk.N, tk.E, tk.W))
         
@@ -299,7 +329,8 @@ class ChatClientGUI:
         self.canvas = tk.Canvas(self.users_area_frame)
         self.scrollbar = ttk.Scrollbar(self.users_area_frame, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = ttk.Frame(self.canvas)
-
+        logging.info("Configured scrollable area")
+        
         #just fancy lambda for custom clickable button in canvas
         self.scrollable_frame.bind(
             "<Configure>",
@@ -314,11 +345,17 @@ class ChatClientGUI:
         self.scrollbar.grid(row=1, column=1, sticky=(tk.N, tk.S))
         # Populate the scrollable area with clickable chat names
         self.populate_chat_names()
+        logging.info("Added specific chat buttons.")
     
     #if here then u clicked a button!! this clears GUi and sets up new GUi for chat area. this is all bare bones but everything shouldwork
     def init_dms(self, target): 
+        self.state.append("messaging_someone")
         # clear area
-        threading.Thread(target=self.receive_messages_chat_area, daemon=True).start()
+        self.sending_message_event = threading.Event() #handle breaking loop in thread
+        self.sending_msg_event2 = threading.Event() # handle sending a message and sleeping other thread
+        self.sending_message_event.set()
+        self.thrd_chat_area = threading.Thread(target=self.receive_messages_chat_area, daemon=False)
+        self.thrd_chat_area.start() # to join later
         self.users_area_frame.grid_remove()
         self.canvas.grid_remove()
         self.scrollbar.grid_remove()
@@ -339,10 +376,39 @@ class ChatClientGUI:
         self.message_entry.grid(column=0, row=2, columnspan=2, sticky=(tk.W, tk.E))
         ttk.Button(self.chat_frame, text="Send", command=lambda: self.threadding_wrapper(self.send_message)).grid(column=1, row=3, sticky=tk.E)
         
+        ttk.Button(self.chat_frame, text="Return", command=self.return_to_previous).grid(column=1, row=5, sticky=tk.E)
         # Configure grid stuff
         self.chat_frame.columnconfigure(0, weight=1)
         self.chat_frame.rowconfigure(0, weight=1)
 
+    ###############################
+    # Returns to previous frame (Think Finite state automata if in this sate return to this state, etc.)
+    def return_to_previous(self):
+        logging.info("inside return_to_previous ")
+        if not self.state:
+            logging.info("in Not")
+            return
+        curr_state = self.state.pop()
+        if curr_state == "chat_area":
+            logging.info("in cha_area")
+            return
+        if curr_state == "messaging_someone":
+            logging.info("clearing screen dm")
+            # Stop the receiving thread first
+            self.sending_message_event.clear()  # Signal thread to stop
+            if hasattr(self, 'thrd_chat_area'):
+                self.thrd_chat_area.join(timeout=1.0)  # Wait for thread to finish
+            
+            def cleanup():
+                self.clear_window()
+                self.init_chat_area()
+                
+            self.master.after(100, cleanup)
+
+        
+        
+
+    ###############################
     #this is a thread
     def login_logic(self, password):
         
@@ -357,10 +423,6 @@ class ChatClientGUI:
             for widget in self.master.winfo_children():
                 widget.destroy()
             ### TODO This needs work:
-            self.main_frame = ttk.Frame(self.master, padding="10")
-            self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-            self.master.columnconfigure(0, weight=1)
-            self.master.rowconfigure(0, weight=1)
             threading.Thread(target=self.init_chat_area, daemon=True).start()
         else:
             messagebox.showerror("Authentication Error", "Invalid username or password")
@@ -395,35 +457,81 @@ class ChatClientGUI:
 
     
     def receive_messages_chat_area(self):
-        while True:
+        time.sleep(.5) # Some weird race condition
+        pattern = r'^!(.*?)~<>~\{(.*)$' #regex that CHECKS -> APPEND_CHAT_AREA
+        self.client_socket.settimeout(1.0)
+        
+        buffer = ""
+        while self.sending_message_event.is_set():
+            #logging.info("IN LOOP INFINITE")
+            if self.sending_msg_event2.is_set():
+                time.sleep(.1) # as to not ignore any msgs
+                continue
             try:
-                message = self.client_socket.recv(1024).decode(FORMAT)
-                if message and message is not None: # get history/listener that inserts into chat frame area
-                    self.chat_area.insert(tk.END, f"{message}")
-                    self.chat_area.see(tk.END)
-                    pass
-            except:
-                print("Connection closed.")
+                try: 
+                    message = self.client_socket.recv(1024).decode(FORMAT)
+                except socket.timeout as e:
+                    #logging.info("Timed out, continuing loop checks.")
+                    continue
+                if message is None and not message: # get history/listener that inserts into chat frame area
+                    continue
+                if not self.sending_message_event.is_set():  # Check again after potentially long operation
+                    break
+                #### Section to handle server bombarding and stuff getting stuck in buffer
+                # Modified buffer handling
+                buffer += message
+                parts = buffer.split(APPEND_CHAT_AREA)
+                buffer = ""  # Clear the buffer after splitting
+                ###
+                try:
+                    for part in parts:  # Process ALL parts
+                        if not part:  # Skip empty parts
+                            continue
+                        instert_msg = APPEND_CHAT_AREA + part
+                        logging.info(f"Trying to match pattern, msg is: {instert_msg}")
+                        match = re.match(pattern, instert_msg)
+                        if not match:
+                            logging.info(f"incorrect match: {match}\nExpected: {pattern}")
+                            buffer += part  # Add unmatched part back to buffer
+                            continue
+                        msg = match.group(2)
+                        logging.info("INSERTING INTO chat area")
+                        self.chat_area.insert(tk.END, f"{msg}\n")
+                        self.chat_area.see(tk.END)
+                except Exception as e:
+                    logging.error(f"Incorrect message format: {e}")
+                    break
+                
+            except Exception as e:
+                print(f"Connection Issue: {e}")
                 break
+        logging.info("Receive messages thread ending")
     #basically pass func into and will execute on thread (can use this for everything tbh I shouldve made this sooner)
     def threadding_wrapper(self, func):
-        threading.Thread(target=func, daemon=True).start()
+        thrd = threading.Thread(target=func, daemon=True)
+        thrd.start()
+        
     
     #this probably needs to run on a thread itself too
     def send_message(self):
+        logging.info("thread started to send message. Getting entry")
         message = self.message_entry.get()
         if not message:
             logging.info(f"got message: {message}")
             return
-
-        pattern = """~<>~{"""
+        logging.info(f"Got message from entry: {message}")
+        
         # Send the message
-        full_message = f"{MSG}{pattern}{message}"
+        full_message = f"{MSG}{APPEND_CHAT_AREA}{message}"
+        logging.info("sending message to other person")
         self.communicate(full_message)
+        logging.info("Finished sending message")
         #insert to canvas, server handles history itself
+        self.sending_msg_event2.set()
         self.chat_area.insert(tk.END, f"{self.username}: {message}\n")
         self.chat_area.see(tk.END)
         self.message_entry.delete(0, tk.END)
+        self.sending_msg_event2.clear()
 
     #if here called from button function just gets history from server
     def handle_history(self, target):
