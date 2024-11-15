@@ -247,9 +247,8 @@ def add_account(username, password, c_pass):
             print(f"An unexpected error occurred: {e}")
             return "Internal error -3"
 
-def send_update_target(curr_user, target_user, msg, client_dict):
+def send_update_target(curr_user, target_user, msg, client_dict, APPEND_CHAT_AREA):
     #check if client connected on opposite end, if so send message... how?
-    from main import APPEND_CHAT_AREA
     pattern = r'^!(.*?)~<>~\{(.*)$'
     try:
         print(f"Currently matching -> {msg}")

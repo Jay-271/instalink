@@ -137,7 +137,8 @@ def handle_client(conn, addr):
                         with username_lock:
                             utils.add_chat(curr_user, target_user, msg)
                         if connected_clients[username]['chat_area']:
-                            utils.send_update_target(curr_user, target_user, msg, connected_clients) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                            utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                        continue  #socket was closed beforehand
                     #Logging purposes
                     if msg:
                         logging.info(f"Got message: {msg}")

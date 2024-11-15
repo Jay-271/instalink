@@ -465,30 +465,35 @@ class ChatClientGUI:
         while self.sending_message_event.is_set():
             #logging.info("IN LOOP INFINITE")
             if self.sending_msg_event2.is_set():
+                time.sleep(.1) # as to not ignore any msgs
                 continue
             try:
                 try: 
                     message = self.client_socket.recv(1024).decode(FORMAT)
                 except socket.timeout as e:
-                    logging.info("Timed out, continuing loop checks.")
+                    #logging.info("Timed out, continuing loop checks.")
                     continue
                 if message is None and not message: # get history/listener that inserts into chat frame area
                     continue
                 if not self.sending_message_event.is_set():  # Check again after potentially long operation
                     break
                 #### Section to handle server bombarding and stuff getting stuck in buffer
+                # Modified buffer handling
                 buffer += message
                 parts = buffer.split(APPEND_CHAT_AREA)
-                buffer = parts.pop()
+                buffer = ""  # Clear the buffer after splitting
                 ###
                 try:
-                    for part in parts:
+                    for part in parts:  # Process ALL parts
+                        if not part:  # Skip empty parts
+                            continue
                         instert_msg = APPEND_CHAT_AREA + part
                         logging.info(f"Trying to match pattern, msg is: {instert_msg}")
                         match = re.match(pattern, instert_msg)
                         if not match:
                             logging.info(f"incorrect match: {match}\nExpected: {pattern}")
-                            continue # probably something weird idk, otherwise add to chat area?
+                            buffer += part  # Add unmatched part back to buffer
+                            continue
                         msg = match.group(2)
                         logging.info("INSERTING INTO chat area")
                         self.chat_area.insert(tk.END, f"{msg}\n")
