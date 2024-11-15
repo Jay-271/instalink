@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
-import copy
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 import re
 
 
@@ -14,9 +15,29 @@ def load_users():
         return json.load(file)
 
 # Check if username and password are valid
-def authenticate( username, password):
+def authenticate(username, password):
     user_db = load_users()
-    return user_db['users'].get(username) == password
+    ph = PasswordHasher()
+    try:
+        # Retrieve the stored hash for the username
+        stored_hash = user_db["users"].get(username)
+        if not stored_hash:
+            print("Username not found or incorrect hash!")
+            return False
+        
+        # Verify the input password against the stored hash
+        if ph.verify(stored_hash, password):
+            print(f"Login successful for {username}!")
+            return True
+    except VerifyMismatchError:
+        print("Incorrect password.")
+    return False
+###########
+# Ex use for dummy accs:
+# validate_password("Alice", "password123")  # Should print "Login successful for Alice!"
+# validate_password("Bob", "wrongPass")      # Should print "Incorrect password."
+# validate_password("Zebra", "zebra123")     # Should print "Login successful for Zebra!"
+###########
 
 #returns ALL chat history for current user
 def get_chats(username):
@@ -217,6 +238,7 @@ def add_account(username, password, c_pass):
     if password != c_pass:
         return "Error confirming passwords."
     
+    ph = PasswordHasher()
     pattern = r'^[a-zA-Z1-9]+$'
     try:
         if not re.match(pattern, username):
@@ -228,7 +250,7 @@ def add_account(username, password, c_pass):
         try:
             users = json.load(db)
             if username not in users['users']:
-                users['users'][username] = password
+                users['users'][username] = ph.hash(password)
                 db.seek(0)
                 json.dump(users, db, indent=4)  # actually writes
                 db.truncate()  # Truncate the file if leftvoers
