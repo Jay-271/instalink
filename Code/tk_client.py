@@ -24,6 +24,7 @@ ALL_CHATS = "!CHATS"
 MSG = "!MSG"
 CREATE_ACC = "!CREATE_ACCOUNT"
 APPEND_CHAT_AREA = """!~<>~{"""
+CLEAR_OUT_MSG_AREA = "!CLEAR_OUT_MSG_AREA"
 FORMAT = "utf-8"
 HEADER = 64
 
@@ -404,6 +405,7 @@ class ChatClientGUI:
                 self.init_chat_area()
                 
             self.master.after(100, cleanup)
+        self.threadding_wrapper(self.communicate(CLEAR_OUT_MSG_AREA))
 
         
         
