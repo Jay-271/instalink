@@ -1,7 +1,12 @@
 # Team Assignments: Personas, Scenarios, and Features
 - Find this in the `wiki` section.
 
-# Main coding branch (since it has issues)
+# A more readable human version of what our program does (WIP):
+
+[Guide.md](guide/guide.md)
+
+
+# Main coding branch 
 
 ## TO RUN:
 Run git clone (this repo)
@@ -16,12 +21,6 @@ Run git clone (this repo)
     - TO EXIT just click the X in the GUI.
 
 > Note there may be errors, if so shoot Jason a msg on teams or make an issue.
-# A more readable human guide:
-
-<iframe src="https://gitlab.com/cs-department-ecu/csci-3030-softeware-engineering-i-fall-2024/instalink/teamassignment/-/raw/main/guide/Comprehensive_Guide__Bob_and_Alice_s_Chat_Journey.pdf" width="100%" height="600px">
-    This browser does not support PDFs. Please download the PDF to view it or click here to be redirected to it: 
-    <a href="https://gitlab.com/cs-department-ecu/csci-3030-softeware-engineering-i-fall-2024/instalink/teamassignment/-/blob/main/guide/Comprehensive_Guide__Bob_and_Alice_s_Chat_Journey.pdf">View PDF</a>.
-</iframe>
 
 ## TODO:
 
