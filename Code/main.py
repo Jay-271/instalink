@@ -24,6 +24,7 @@ HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 CREATE_ACC = "!CREATE_ACCOUNT"
 MSG = "!MSG"
+SEARCH = "!SEARCH"
 CLEAR_OUT_MSG_AREA = "!CLEAR_OUT_MSG_AREA"
 APPEND_CHAT_AREA = """!~<>~{""" #THIS IS NOT REGEX, we use REGEX CHECK to check for this
 
@@ -149,6 +150,12 @@ def handle_client(conn, addr):
                         continue  #socket was closed beforehand
                     if CLEAR_OUT_MSG_AREA in msg:
                         connected_clients[username]['chat_area']  = False
+                    if SEARCH in msg:
+                        _, target = msg.split(',')
+                        if not utils.search_target(target):
+                            conn.send("User not in database".encode(FORMAT))
+                            continue
+                        conn.send("SUCCESS".encode(FORMAT))
                     #Logging purposes
                     if msg:
                         logging.info(f"Got message: {msg}")

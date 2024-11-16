@@ -25,6 +25,7 @@ MSG = "!MSG"
 CREATE_ACC = "!CREATE_ACCOUNT"
 APPEND_CHAT_AREA = """!~<>~{"""
 CLEAR_OUT_MSG_AREA = "!CLEAR_OUT_MSG_AREA"
+SEARCH = "!SEARCH"
 FORMAT = "utf-8"
 HEADER = 64
 
@@ -363,7 +364,8 @@ class ChatClientGUI:
         self.create_chat_entry.insert(0, 'Enter User to search')
         self.create_chat_entry.bind('<FocusIn>', lambda e: self.create_chat_entry.delete(0, 'end'))
         self.create_chat_entry.bind('<FocusOut>', lambda e: self.create_chat_entry.insert(0, 'Username') if self.create_chat_entry.get() == '' else None)
-        ttk.Button(self.right_frame, text="Create Chat", command=self.create_new_chat).grid(row=2,column=0, sticky=(tk.N,tk.E))
+        self.create_chat_button = ttk.Button(self.right_frame, text="Create Chat", command=self.create_new_chat)
+        self.create_chat_button.grid(row=2,column=0, sticky=(tk.N,tk.E))
     
     #if here then u clicked a button!! this clears GUi and sets up new GUi for chat area. this is all bare bones but everything shouldwork
     def init_dms(self, target): 
@@ -374,9 +376,11 @@ class ChatClientGUI:
         self.sending_message_event.set()
         self.thrd_chat_area = threading.Thread(target=self.receive_messages_chat_area, daemon=False)
         self.thrd_chat_area.start() # to join later
+        
         self.users_area_frame.grid_remove()
         self.canvas.grid_remove()
         self.scrollbar.grid_remove()
+        self.right_frame.grid_remove()
 
         # Create the chat frame
         self.chat_frame = ttk.Frame(self.main_frame, padding="10", relief="solid", borderwidth=1)
@@ -428,8 +432,23 @@ class ChatClientGUI:
     ##############################
     # Create brand new chat with some user, X
     def create_new_chat(self):
+        self.create_chat_button.config(state='disabled')
         target_user = self.create_chat_entry.get()
-        print(target_user)
+        logging.info(f"Searching for: {target_user}")
+        payload = f"{SEARCH},{target_user}"
+        self.communicate(payload)
+        
+        reply = self.client_socket.recv(1024).decode(FORMAT)
+        if not reply or reply != "SUCCESS":
+            self.create_chat_button.config(state='normal')
+            #some code to show reply message froms server
+            return # need to handle maybe show error messagebox
+        
+        # init chat
+        self.create_chat_button.config(state='normal')
+        
+        self.init_dms(target=target_user)
+                
         return
         
     ##############################

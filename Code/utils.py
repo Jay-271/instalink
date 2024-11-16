@@ -291,3 +291,9 @@ def send_update_target(curr_user, target_user, msg, client_dict, APPEND_CHAT_ARE
         return
     client_dict[target_user]['connection'].send(f"{APPEND_CHAT_AREA}{curr_user}: {msg}\n".encode('utf-8')) #use their socket since we know it exists to send them amessage just as we would before. 
     return
+def search_target(target):
+    user_db = load_users()
+    users = user_db["users"]
+    if target in users:
+        return True
+    return False
