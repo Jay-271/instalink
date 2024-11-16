@@ -238,6 +238,11 @@ def add_account(username, password, c_pass):
     if password != c_pass:
         return "Error confirming passwords."
     
+    if len(username) > 30:
+        return f"Username Length too large. Please enter a length less than 30 chars."
+    if len(password) < 5:
+        return f"Password length too short. Enter a size greater than 5 chars."
+    
     ph = PasswordHasher()
     pattern = r'^[a-zA-Z1-9]+$'
     try:
