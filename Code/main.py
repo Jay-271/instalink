@@ -80,7 +80,7 @@ def handle_client(conn, addr):
                     if not LOGGED_IN:
                         if CREATE_ACC in msg: #if u wanna create acc
                             _, new_user, new_pass, new_pass2 = msg.split(',')
-                            with database_lock:
+                            with username_lock:
                                 response = utils.add_account(new_user, new_pass, new_pass2)
                             conn.send(response.encode(FORMAT))
                             conn.close()
@@ -143,7 +143,7 @@ def handle_client(conn, addr):
                         print(f"sending: {chats}")
                     if MSG in msg:
                         #append chat data
-                        with username_lock:
+                        with database_lock:
                             utils.add_chat(curr_user, target_user, msg)
                         try:
                             if connected_clients[username]['chat_area']:
