@@ -24,6 +24,7 @@ HISTORY_MESSAGE = "!HISTORY"
 ALL_CHATS = "!CHATS"
 CREATE_ACC = "!CREATE_ACCOUNT"
 MSG = "!MSG"
+SEARCH = "!SEARCH"
 CLEAR_OUT_MSG_AREA = "!CLEAR_OUT_MSG_AREA"
 APPEND_CHAT_AREA = """!~<>~{""" #THIS IS NOT REGEX, we use REGEX CHECK to check for this
 
@@ -103,7 +104,9 @@ def handle_client(conn, addr):
                                     print(f"Invalid Credentials or user {username} does not exist.")
                                     break
                                 if username in connected_clients:
-                                    return f"Error, {username} is already logged in another device."
+                                    logging.info(f"{username} tried to login twice")
+                                    conn.send(f"Error. User {username} is already logged in.".encode(FORMAT))
+                                    break
                                 conn.send(AUTH_RESPONSE.encode(FORMAT))
                                 LOGGED_IN = True
                                 connected_clients[username] = {
@@ -142,11 +145,20 @@ def handle_client(conn, addr):
                         #append chat data
                         with username_lock:
                             utils.add_chat(curr_user, target_user, msg)
-                        if connected_clients[username]['chat_area']:
-                            utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                        try:
+                            if connected_clients[username]['chat_area']:
+                                utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                        except Exception as e:
+                            print(f"User {username} not connected -> {e}")
                         continue  #socket was closed beforehand
                     if CLEAR_OUT_MSG_AREA in msg:
                         connected_clients[username]['chat_area']  = False
+                    if SEARCH in msg:
+                        _, target = msg.split(',')
+                        if not utils.search_target(target):
+                            conn.send("User not in database".encode(FORMAT))
+                            continue
+                        conn.send("SUCCESS".encode(FORMAT))
                     #Logging purposes
                     if msg:
                         logging.info(f"Got message: {msg}")
@@ -155,7 +167,7 @@ def handle_client(conn, addr):
 
     logging.info("Closing socket connection")
     conn.close()
-    if curr_user in connected_clients:
+    if username  in connected_clients:
         del connected_clients[username] # Not active anymore
     logging.info("Returning...")
     return

@@ -2,6 +2,7 @@
     "users": {
         "Alice": "$argon2id$v=19$m=65536,t=3,p=4$TcoxSlVAW8PyPBLoti73hw$TIQQkvNx5rirkDYBWJo6mvM/56O1pTG3qa5vhIVqY4Q",
         "Bob": "$argon2id$v=19$m=65536,t=3,p=4$jIpQuhiCKQrn0SNnKFWEFw$jEVtuYihvyPIGENFpXHc0o4L6lm4MhdsW9mLZyT8WAA",
-        "Zebra": "$argon2id$v=19$m=65536,t=3,p=4$wFAxokQCv3vtwPHHQESvcQ$1JpDrposd6YQ3ecNUFeKEXXZDbLbETdYxPSvcfw+1rU"
+        "Zebra": "$argon2id$v=19$m=65536,t=3,p=4$wFAxokQCv3vtwPHHQESvcQ$1JpDrposd6YQ3ecNUFeKEXXZDbLbETdYxPSvcfw+1rU",
+        "Jason": "$argon2id$v=19$m=65536,t=3,p=4$uWbsjPJKDx0X4gd03WPp6w$zpYHiybXb1o0RFrODUR77tXU8Gf9StMk3bmzW2cMktA"
     }
 }
