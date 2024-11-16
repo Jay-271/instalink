@@ -27,7 +27,7 @@ def authenticate(username, password):
         
         # Verify the input password against the stored hash
         if ph.verify(stored_hash, password):
-            print(f"Login successful for {username}!")
+            print(f"Password verification successful for {username}!")
             return True
     except VerifyMismatchError:
         print("Incorrect password.")

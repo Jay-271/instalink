@@ -103,7 +103,9 @@ def handle_client(conn, addr):
                                     print(f"Invalid Credentials or user {username} does not exist.")
                                     break
                                 if username in connected_clients:
-                                    return f"Error, {username} is already logged in another device."
+                                    logging.info(f"{username} tried to login twice")
+                                    conn.send(f"Error. User {username} is already logged in.".encode(FORMAT))
+                                    break
                                 conn.send(AUTH_RESPONSE.encode(FORMAT))
                                 LOGGED_IN = True
                                 connected_clients[username] = {
@@ -155,7 +157,7 @@ def handle_client(conn, addr):
 
     logging.info("Closing socket connection")
     conn.close()
-    if curr_user in connected_clients:
+    if username  in connected_clients:
         del connected_clients[username] # Not active anymore
     logging.info("Returning...")
     return
