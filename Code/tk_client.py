@@ -25,6 +25,7 @@ MSG = "!MSG"
 CREATE_ACC = "!CREATE_ACCOUNT"
 APPEND_CHAT_AREA = """!~<>~{"""
 CLEAR_OUT_MSG_AREA = "!CLEAR_OUT_MSG_AREA"
+SEARCH = "!SEARCH"
 FORMAT = "utf-8"
 HEADER = 64
 
@@ -312,11 +313,19 @@ class ChatClientGUI:
         # All Messages frame
         if not self.state:
             self.state.append("chat_area")
+        #main frame on left
         self.main_frame = ttk.Frame(self.master, padding="10")
         self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        self.master.columnconfigure(0, weight=1)
-        self.master.rowconfigure(0, weight=1)
         logging.info("Configured main frame")
+        
+        # Frame 2: on the right -> honestly just gnna use this for a single new chat button but this can be fixed however later. it's bare bones.
+        self.right_frame = ttk.Frame(self.master, padding="10")
+        self.right_frame.grid(row=0, column=1, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        # Configure grid weights
+        self.master.columnconfigure(0, weight=1)  # Left column (main_frame)
+        self.master.columnconfigure(1, weight=1)  # Right column (right_frame)
+        self.master.rowconfigure(0, weight=1)     # Single row
         
         self.users_area_frame = ttk.Frame(self.main_frame, padding="10")
         self.users_area_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -347,6 +356,16 @@ class ChatClientGUI:
         # Populate the scrollable area with clickable chat names
         self.populate_chat_names()
         logging.info("Added specific chat buttons.")
+        
+        ttk.Label(self.right_frame, text = "Create a new chat").grid(row=0, column=0, sticky=(tk.N,tk.E,tk.W))
+        #Entry for create_chat_entry field        
+        self.create_chat_entry = Entry(self.right_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", highlightbackground='white', font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
+        self.create_chat_entry.grid(row=1,column=0,sticky=(tk.N,tk.E))
+        self.create_chat_entry.insert(0, 'Enter User to search')
+        self.create_chat_entry.bind('<FocusIn>', lambda e: self.create_chat_entry.delete(0, 'end'))
+        self.create_chat_entry.bind('<FocusOut>', lambda e: self.create_chat_entry.insert(0, 'Username') if self.create_chat_entry.get() == '' else None)
+        self.create_chat_button = ttk.Button(self.right_frame, text="Create Chat", command=self.create_new_chat)
+        self.create_chat_button.grid(row=2,column=0, sticky=(tk.N,tk.E))
     
     #if here then u clicked a button!! this clears GUi and sets up new GUi for chat area. this is all bare bones but everything shouldwork
     def init_dms(self, target): 
@@ -357,9 +376,11 @@ class ChatClientGUI:
         self.sending_message_event.set()
         self.thrd_chat_area = threading.Thread(target=self.receive_messages_chat_area, daemon=False)
         self.thrd_chat_area.start() # to join later
+        
         self.users_area_frame.grid_remove()
         self.canvas.grid_remove()
         self.scrollbar.grid_remove()
+        self.right_frame.grid_remove()
 
         # Create the chat frame
         self.chat_frame = ttk.Frame(self.main_frame, padding="10", relief="solid", borderwidth=1)
@@ -406,11 +427,31 @@ class ChatClientGUI:
                 
             self.master.after(100, cleanup)
         self.threadding_wrapper(self.communicate(CLEAR_OUT_MSG_AREA))
-
-        
-        
-
     ###############################
+    
+    ##############################
+    # Create brand new chat with some user, X
+    def create_new_chat(self):
+        self.create_chat_button.config(state='disabled')
+        target_user = self.create_chat_entry.get()
+        logging.info(f"Searching for: {target_user}")
+        payload = f"{SEARCH},{target_user}"
+        self.communicate(payload)
+        
+        reply = self.client_socket.recv(1024).decode(FORMAT)
+        if not reply or reply != "SUCCESS":
+            self.create_chat_button.config(state='normal')
+            #some code to show reply message froms server
+            return # need to handle maybe show error messagebox
+        
+        # init chat
+        self.create_chat_button.config(state='normal')
+        
+        self.init_dms(target=target_user)
+                
+        return
+        
+    ##############################
     #this is a thread
     def login_logic(self, password):
         
