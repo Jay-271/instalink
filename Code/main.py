@@ -145,8 +145,11 @@ def handle_client(conn, addr):
                         #append chat data
                         with username_lock:
                             utils.add_chat(curr_user, target_user, msg)
-                        if connected_clients[username]['chat_area']:
-                            utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                        try:
+                            if connected_clients[username]['chat_area']:
+                                utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                        except Exception as e:
+                            print(f"User {username} not connected -> {e}")
                         continue  #socket was closed beforehand
                     if CLEAR_OUT_MSG_AREA in msg:
                         connected_clients[username]['chat_area']  = False
