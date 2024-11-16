@@ -78,10 +78,10 @@ def handle_client(conn, addr):
                     ###Logging in stuff here
                     if not LOGGED_IN:
                         if CREATE_ACC in msg: #if u wanna create acc
+                            _, new_user, new_pass, new_pass2 = msg.split(',')
                             with database_lock:
-                                _, new_user, new_pass, new_pass2 = msg.split(',')
-                                message = utils.add_account(new_user, new_pass, new_pass2)
-                            conn.send(message.encode(FORMAT))
+                                response = utils.add_account(new_user, new_pass, new_pass2)
+                            conn.send(response.encode(FORMAT))
                             conn.close()
                             print("Exiting thread.")
                             return
@@ -96,9 +96,14 @@ def handle_client(conn, addr):
                                 username = rsa.decrypt(conn.recv(1024), private_key).decode(FORMAT)
                                 conn.send("Enter your password: ".encode(FORMAT))
                                 password =rsa.decrypt(conn.recv(1024), private_key).decode(FORMAT)
+                                if len(username) > 30:
+                                    conn.send(f"Username Length too large. Please enter a length less than 30 chars.".encode(FORMAT))
+                                    break
                                 if not utils.authenticate(username, password):
                                     print(f"Invalid Credentials or user {username} does not exist.")
                                     break
+                                if username in connected_clients:
+                                    return f"Error, {username} is already logged in another device."
                                 conn.send(AUTH_RESPONSE.encode(FORMAT))
                                 LOGGED_IN = True
                                 connected_clients[username] = {
