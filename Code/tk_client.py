@@ -196,7 +196,7 @@ class ChatClientGUI:
         
         #make new frame + button for new acc creation (TODO - actual functionality)
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=247)
-        self.new_acc_btn = Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='#57a1f8', border=0, command= lambda: self.signup())
+        self.new_acc_btn = Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='white', border=0, command= lambda: self.signup())
         self.new_acc_btn.place(x=35,y=280)
         
         #new label + button  to go back to login page
