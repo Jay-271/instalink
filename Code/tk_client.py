@@ -110,12 +110,19 @@ class ChatClientGUI:
             if self.client_socket and self.client_socket.fileno() != -1: # returns positive int if socket open, else -1
                 try:
                     self.communicate(DISCONNECT_MESSAGE)
-                    self.client_socket.close()
+                    if hasattr(self, 'thrd_chat_area'):
+                        self.sending_message_event.clear()  # Signal thread to stop
+                        self.thrd_chat_area.join(timeout=1.0)  # Wait for thread to finish
+                    self.master.destroy()
+                    return
                 except Exception as e:
-                    logging.error(f"Error closing socket: {e}")
-            
+                    logging.error(f"Error closing socket (probably already closed from server): {e}")
+            else:
+                #No socket just kill it
+                self.master.destroy()
+                return
             # Close the application
-            self.master.destroy()
+
     
     #Basically sets up login without connecting until time to.
     def create_widgets(self):
@@ -196,7 +203,7 @@ class ChatClientGUI:
         
         #make new frame + button for new acc creation (TODO - actual functionality)
         Frame(self.main_frame, width=295, height=2, bg='black').place(x=25, y=247)
-        self.new_acc_btn = Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='#57a1f8', border=0, command= lambda: self.signup())
+        self.new_acc_btn = Button(self.main_frame, width=30, pady=7, text='Sign up', bg='#57a1f8', fg='white', border=0, command= lambda: self.signup())
         self.new_acc_btn.place(x=35,y=280)
         
         #new label + button  to go back to login page

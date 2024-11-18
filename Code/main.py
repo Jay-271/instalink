@@ -77,6 +77,9 @@ def handle_client(conn, addr):
                         logging.info("got disconnect message, breaking from loop")
                         break
                     ###Logging in stuff here
+                    #Logging purposes
+                    if msg:
+                        logging.info(f"Got message: {msg}")
                     if not LOGGED_IN:
                         if CREATE_ACC in msg: #if u wanna create acc
                             _, new_user, new_pass, new_pass2 = msg.split(',')
@@ -121,7 +124,7 @@ def handle_client(conn, addr):
                                 logging.error("Quitting.")
                                 break
                     #If here then then client still connected
-                    if HISTORY_MESSAGE in msg:
+                    if msg.startswith(HISTORY_MESSAGE) and LOGGED_IN:
                         logging.info("getting history")
                         with database_lock:
                             history = utils.get_chat_history(msg)
@@ -133,7 +136,7 @@ def handle_client(conn, addr):
                             conn.send(f"{APPEND_CHAT_AREA}{dm['owner']}: {dm['contents']}\n".encode(FORMAT)) #New protocol to append if in chat area
                             print(f"sending: {APPEND_CHAT_AREA}{dm['owner']}: {dm['contents']}\n")
                         connected_clients[username]['chat_area']  = True #only update this here since i know from client code only in chat area if history message between user and sender
-                    if ALL_CHATS in msg:
+                    if msg.startswith(ALL_CHATS) and LOGGED_IN:
                         _, username = msg.split(',')
                         chats = utils.get_chats_only(username)
                         logging.info(f"Sent chat history of: {chats}")
@@ -141,7 +144,7 @@ def handle_client(conn, addr):
                             conn.send("None".encode(FORMAT))
                         conn.send(str(chats).encode(FORMAT))
                         print(f"sending: {chats}")
-                    if MSG in msg:
+                    if msg.startswith(MSG) and LOGGED_IN:
                         #append chat data
                         with database_lock:
                             utils.add_chat(curr_user, target_user, msg)
@@ -151,17 +154,14 @@ def handle_client(conn, addr):
                         except Exception as e:
                             print(f"User {username} not connected -> {e}")
                         continue  #socket was closed beforehand
-                    if CLEAR_OUT_MSG_AREA in msg:
+                    if msg.startswith(CLEAR_OUT_MSG_AREA) and LOGGED_IN:
                         connected_clients[username]['chat_area']  = False
-                    if SEARCH in msg:
+                    if msg.startswith(SEARCH) and LOGGED_IN:
                         _, target = msg.split(',')
                         if not utils.search_target(target):
                             conn.send("User not in database".encode(FORMAT))
                             continue
                         conn.send("SUCCESS".encode(FORMAT))
-                    #Logging purposes
-                    if msg:
-                        logging.info(f"Got message: {msg}")
             except socket.error: #if error (like client closes)
                 break
 
