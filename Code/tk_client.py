@@ -110,12 +110,19 @@ class ChatClientGUI:
             if self.client_socket and self.client_socket.fileno() != -1: # returns positive int if socket open, else -1
                 try:
                     self.communicate(DISCONNECT_MESSAGE)
-                    self.client_socket.close()
+                    if hasattr(self, 'thrd_chat_area'):
+                        self.sending_message_event.clear()  # Signal thread to stop
+                        self.thrd_chat_area.join(timeout=1.0)  # Wait for thread to finish
+                    self.master.destroy()
+                    return
                 except Exception as e:
-                    logging.error(f"Error closing socket: {e}")
-            
+                    logging.error(f"Error closing socket (probably already closed from server): {e}")
+            else:
+                #No socket just kill it
+                self.master.destroy()
+                return
             # Close the application
-            self.master.destroy()
+
     
     #Basically sets up login without connecting until time to.
     def create_widgets(self):
