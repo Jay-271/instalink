@@ -48,8 +48,8 @@ class ChatClientGUI:
         
         self.sending_message_event = None
         self.sending_msg_event2 = None
+        #self.history = set()
         self.state = [] #stack used to store states to return.
-        self.history = set() #for history (needs to be modified later since it only gives and sends update to get history from server once (when you click button on chat name))
         self.client_socket = None
         self.username = None #your userbane
         self.respond = None #Auth (if logged in then this is the AUTH message gotten back from server, used in check for if AUTH in repsond...)
@@ -578,11 +578,11 @@ class ChatClientGUI:
 
     #if here called from button function just gets history from server
     def handle_history(self, target):
-        if target in self.history:
-            return
+        #if target in self.history:
+        #    return
         payload = f"{HISTORY_MESSAGE},{self.username},{target}"
         self.communicate(payload)
-        self.history.add(target)
+        #self.history.add(target)
 
 def main():
     root = tk.Tk()
