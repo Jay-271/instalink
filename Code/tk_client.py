@@ -29,6 +29,7 @@ SEARCH = "!SEARCH"
 FORMAT = "utf-8"
 HEADER = 64
 
+#HOST = socket.gethostbyname('35.237.170.18') #Server running vevrsion 11/19/24. Uncomment and comment line below to connect to the Cloud.
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 8000
 
