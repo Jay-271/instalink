@@ -430,7 +430,7 @@ class ChatClientGUI:
         self.message_entry.grid(column=0, row=2, columnspan=2, sticky=(tk.W, tk.E))
         ttk.Button(self.chat_frame, text="Send", command=lambda: self.threadding_wrapper(self.send_message)).grid(column=1, row=3, sticky=tk.E)
         
-        ttk.Button(self.chat_frame, text="Return", command=self.return_to_previous).grid(column=1, row=5, sticky=tk.E)
+        ttk.Button(self.chat_frame, text="Return", command=lambda: self.return_to_previous()).grid(column=1, row=5, sticky=tk.E)
         # Configure grid stuff
         self.chat_frame.columnconfigure(0, weight=1)
         self.chat_frame.rowconfigure(0, weight=1)
@@ -476,8 +476,8 @@ class ChatClientGUI:
         reply = self.client_socket.recv(1024).decode(FORMAT)
         if not reply or reply != "SUCCESS":
             self.create_chat_button.config(state='normal')
-            #some code to show reply message froms server
-            return # need to handle maybe show error messagebox
+            messagebox.showwarning("User not found!", f"Could not find {target_user}. Are you sure this user is registered?")
+            return
         
         # init chat
         self.create_chat_button.config(state='normal')
