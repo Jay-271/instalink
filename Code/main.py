@@ -41,7 +41,7 @@ def handle_client(conn, addr):
     connected = True
     target_user = "" #Variables set as soon as history is made (aka button to chat between current user and reciever is clicked)
     curr_user = "" #Therefore we can assume still same user being messaged and will never be null (i hope?)
-    
+    username = ""
     
     try:
         with open("key/private.pem", 'rb') as f:
@@ -167,7 +167,10 @@ def handle_client(conn, addr):
 
     logging.info("Closing socket connection")
     conn.close()
-    if username  in connected_clients:
+    if not username:
+        logging.info("Returning...")
+        return
+    elif username  in connected_clients:
         del connected_clients[username] # Not active anymore
     logging.info("Returning...")
     return
