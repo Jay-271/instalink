@@ -33,6 +33,11 @@ HEADER = 64
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 8000
 
+# Define the maximum message length (original was 1024)
+MAX_RSA_KEY_SIZE_BYTES = 1024 // 8  # 128 bytes
+RSA_PADDING_OVERHEAD = 11  # PKCS#1 v1.5 padding overhead
+MAX_MESSAGE_LENGTH = MAX_RSA_KEY_SIZE_BYTES - RSA_PADDING_OVERHEAD
+
 class ChatClientGUI:
     #master = root method (main method of tkinter)
     def __init__(self, master):
@@ -74,6 +79,19 @@ class ChatClientGUI:
     def encode(self, msg):
         assert isinstance(msg, str)
         return rsa.encrypt(msg.encode(encoding=FORMAT), self.pub_key)
+    # Function to check length for RSA key encryption
+    def can_encrypt(self, message):
+        if len(message) > MAX_MESSAGE_LENGTH:
+            protocol = None
+            try:
+                protocol, _ = message.split(',')
+            except Exception as e:
+                e = e
+            if protocol:
+                messagebox.showerror("Error", f"Unable to connect to send message.\nMessage length exceeded {MAX_MESSAGE_LENGTH-len(protocol)}.")
+            messagebox.showerror("Error", f"Unable to connect to send message.\nMessage length exceeded {MAX_MESSAGE_LENGTH}.")
+            return False
+        return True
     #Assuming you have a message to send to the server we can now use this wrapper function
     def communicate(self, msg):
         enc_msg = self.encode(msg)
@@ -231,8 +249,14 @@ class ChatClientGUI:
             except Exception as e:
                 messagebox.showerror("Connection Error", f"Unable to connect to server: {e}")
                 return
-            
+            if not self.can_encrypt(data):
+                if self.new_acc_btn and self.new_acc_btn.winfo_exists():
+                    self.new_acc_btn.config(state='normal')
+                self.communicate(DISCONNECT_MESSAGE)
+                self.client_socket.close()
+                return
             message = self.communicate_newacc(data).decode(FORMAT)
+                
             self.client_socket.close()
             if "Successful account creation" in message:
                 messagebox.showinfo("Signup", f"{message}")
@@ -307,9 +331,9 @@ class ChatClientGUI:
             button.grid(row=idx, column=0, sticky="ew", pady=2)
             
     def prev_chats(self):
-        payload = f"{ALL_CHATS},{self.username}"
+        payload = f"{ALL_CHATS},{self.username}" #No need to modify this I don't think... user cannot interact with this payload
         logging.info(f"Sent {payload}")
-
+        
         self.communicate(payload)     
         message = self.client_socket.recv(1024).decode(FORMAT)
         logging.info(f"Got chats_only back: {message}")
@@ -372,7 +396,7 @@ class ChatClientGUI:
         self.create_chat_entry.insert(0, 'Enter User to search')
         self.create_chat_entry.bind('<FocusIn>', lambda e: self.create_chat_entry.delete(0, 'end'))
         self.create_chat_entry.bind('<FocusOut>', lambda e: self.create_chat_entry.insert(0, 'Username') if self.create_chat_entry.get() == '' else None)
-        self.create_chat_button = ttk.Button(self.right_frame, text="Create Chat", command=self.create_new_chat)
+        self.create_chat_button = ttk.Button(self.right_frame, text="Create Chat", command=lambda:self.create_new_chat())
         self.create_chat_button.grid(row=2,column=0, sticky=(tk.N,tk.E))
     
     #if here then u clicked a button!! this clears GUi and sets up new GUi for chat area. this is all bare bones but everything shouldwork
@@ -434,7 +458,7 @@ class ChatClientGUI:
                 self.init_chat_area()
                 
             self.master.after(100, cleanup)
-        self.threadding_wrapper(self.communicate(CLEAR_OUT_MSG_AREA))
+        self.threadding_wrapper(self.communicate(CLEAR_OUT_MSG_AREA)) #user cannot modify this so no need to check length
     ###############################
     
     ##############################
@@ -444,6 +468,9 @@ class ChatClientGUI:
         target_user = self.create_chat_entry.get()
         logging.info(f"Searching for: {target_user}")
         payload = f"{SEARCH},{target_user}"
+        if not self.can_encrypt(payload):
+            self.create_chat_button.config(state='normal')
+            return
         self.communicate(payload)
         
         reply = self.client_socket.recv(1024).decode(FORMAT)
@@ -466,8 +493,7 @@ class ChatClientGUI:
         self.communicate(LOGIN_MESSAGE)
         self.communicate_pass(password=password)
         
-        respond = self.client_socket.recv(1024).decode(FORMAT)
-        self.respond = respond
+        self.respond = self.client_socket.recv(1024).decode(FORMAT)
     def handle_auth(self): #need to make this somehow loop forever until AUTH response is returned but for now just sleep 2
         time.sleep(2)
         if AUTH_RESPONSE in self.respond:
@@ -486,11 +512,14 @@ class ChatClientGUI:
         self.sign_in_button.config(state='disabled')
         self.username = self.username_entry.get()
         password = self.password_entry.get()
-        
-        if not self.username or not password:
+
+        if self.username == "Username" or password == "Password":
             messagebox.showerror("Error", "Please enter both username and password")
+            self.sign_in_button.config(state='normal')
             return
-        
+        if not self.can_encrypt(self.username) or not self.can_encrypt(password):
+            self.sign_in_button.config(state='normal')
+            return
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.client_socket.connect((HOST, PORT))
@@ -574,6 +603,9 @@ class ChatClientGUI:
         
         # Send the message
         full_message = f"{MSG}{APPEND_CHAT_AREA}{message}"
+        if not self.can_encrypt(full_message):
+            logging.error(f"Message too long error for len={len(full_message)}")
+            return
         logging.info("sending message to other person")
         self.communicate(full_message)
         logging.info("Finished sending message")
@@ -589,7 +621,7 @@ class ChatClientGUI:
         #if target in self.history:
         #    return
         payload = f"{HISTORY_MESSAGE},{self.username},{target}"
-        self.communicate(payload)
+        self.communicate(payload) # Not needed to check since user doesnt mess with it
         #self.history.add(target)
 
 def main():
