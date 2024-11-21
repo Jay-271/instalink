@@ -8,6 +8,7 @@ import time
 import ast
 import rsa
 import os
+import platform 
 
 # Set up logging
 logging.basicConfig(
@@ -43,8 +44,11 @@ class ChatClientGUI:
     def __init__(self, master):
         script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
         image_path = os.path.join(script_dir, "images", "Logo.png")
+        logo_path = os.path.join(script_dir, "images", "Logo_icon.png")
+        logo_img = PhotoImage(file=logo_path)
         
         self.master = master
+        self.master.iconphoto(False, logo_img)
         self.master.title("Instalink")
         self.master.geometry("925x500+300+200")
         self.master.configure(bg="#fff")
@@ -630,5 +634,8 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
+    if platform.system() not in ["Darwin", "Linux"]:  # Darwin = macOS. idk how to fix mac or linux icon but this is for windows icon.
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("instalink_app")
     main()
     
