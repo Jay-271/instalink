@@ -3,7 +3,80 @@ from datetime import datetime
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 import re
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+def to_gpt(msg, database_lock, user, target):
+    """"
+    Loads env file with api key to openai and sends chat completion
+    
+    Returns response from openai or error
+    """
+    # Path to the .env file
+    dotenv_path = os.path.join(os.path.dirname(__file__), 'key', '.env')
+    load_dotenv(dotenv_path)
+    api_key = os.getenv("GPT_TOKEN")
+    client = OpenAI(
+        api_key = api_key
+    )
 
+    conversation = []
+    init_convo = { "role": "system", "content": "You are a helpful assistant. Be intruiguing when answering requests or simply continue the conversation. Always respond with something to add.\nBe CONCISE."}
+    conversation.append(init_convo)
+    ### Split data -> Comes in form of !HISTORY,target,user {pattern} prompt for ai
+    left, right = gpt_msg_splitter(msg, user, target)
+    print(f"{left=}\n{right=}")
+    #### 
+    if left is None or right is None:
+        return "Error with messaging parsing."
+    
+    with database_lock:
+        history = get_chat_history(left) # needs message to be in format protocol,target,user seprated by a comma...
+    if history is not None:
+        #no previous chat history, load default config
+        for dm in history:
+            if dm['owner'] == 'Chat':
+                conversation.append({ "role": "assistant", "content": dm['contents']})
+            else:
+                conversation.append({ "role": "user", "content": dm['contents']})        
+    ### after here messages convo is ready. lets send the prompt.
+    conversation.append({ "role": "user", "content": f"{right}\nRemember to be concise."})
+    conversation = conversation[:19]
+    if len(conversation) == 19:
+        #if messages were cut off then take first 19, reverse, append system message, re-reverse to have correct order.
+        conversation  = conversation[::-1]
+        conversation.append(init_convo)
+        conversation  = conversation[::-1]
+    print(f"The conversation thus far is: {conversation}")
+    try:
+        # Call the Chat Completions API
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",  
+            messages=conversation,  # Replace with first 20 msgs
+            stream=False
+        )
+        # Process the response
+        response = response.choices[0].message.content
+        print(response)
+        return response
+    except Exception as e:
+        # Handle errors from the OpenAI API
+        print(f"An error occurred: {e}")
+        return "Error during request. Please try again later."
+def gpt_msg_splitter(msg, user, target):
+    # Regex to match the pattern
+    pattern = r'^!(.*?)~<>~\{(.*)$'
+    try:
+        print(f"Currently matching -> {msg}")
+        match = re.match(pattern, msg)
+        if not match:
+            raise Exception("Error: Invalid message")
+        print(f"Matched!")
+        msg = match.group(2) 
+    except Exception as e:
+        return None
+    format_left = f"!HISTORY,{target},{user}"
+    return format_left, msg
 
 def get_current_datetime():
     now = datetime.now()

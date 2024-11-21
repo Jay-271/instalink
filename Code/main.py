@@ -40,7 +40,7 @@ def handle_client(conn, addr):
     LOGGED_IN = False
     connected = True
     target_user = "" #Variables set as soon as history is made (aka button to chat between current user and reciever is clicked)
-    curr_user = "" #Therefore we can assume still same user being messaged and will never be null (i hope?)
+    #curr_user = "" #Therefore we can assume still same user being messaged and will never be null (i hope?)
     username = ""
     
     try:
@@ -128,7 +128,7 @@ def handle_client(conn, addr):
                         logging.info("getting history")
                         with database_lock:
                             history = utils.get_chat_history(msg)
-                        _, curr_user, target_user = msg.split(',')
+                        _, username, target_user = msg.split(',')
                         if history is None:
                             #no previous chat history
                             continue
@@ -147,13 +147,26 @@ def handle_client(conn, addr):
                     if msg.startswith(MSG) and LOGGED_IN:
                         #append chat data
                         with database_lock:
-                            utils.add_chat(curr_user, target_user, msg)
+                            utils.add_chat(username, target_user, msg)
                         try:
                             if connected_clients[username]['chat_area']:
-                                utils.send_update_target(curr_user, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
+                                utils.send_update_target(username, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
                         except Exception as e:
                             print(f"User {username} not connected -> {e}")
-                        continue  #socket was closed beforehand
+                        
+                        if target_user == 'Chat':
+                            original_response =  utils.to_gpt(msg, database_lock, username, target_user)
+                            response = APPEND_CHAT_AREA + utils.to_gpt(msg, database_lock, username, target_user)
+                            response_to_save = MSG + response
+                            utils.send_update_target(target_user, username, response, connected_clients, APPEND_CHAT_AREA) #send update back?
+                            if original_response == "Error during request. Please try again later.":
+                                continue
+                            else:
+                                logging.info("Got message from chat, adding to DB.")
+                                with database_lock:
+                                    utils.add_chat(target_user, username, response_to_save)
+
+                        continue 
                     if msg.startswith(CLEAR_OUT_MSG_AREA) and LOGGED_IN:
                         connected_clients[username]['chat_area']  = False
                     if msg.startswith(SEARCH) and LOGGED_IN:
@@ -162,6 +175,7 @@ def handle_client(conn, addr):
                             conn.send("User not in database".encode(FORMAT))
                             continue
                         conn.send("SUCCESS".encode(FORMAT))
+                        continue
             except socket.error: #if error (like client closes)
                 break
 

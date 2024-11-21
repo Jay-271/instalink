@@ -9,9 +9,11 @@
 # Main coding branch 
 
 ## TO RUN:
+> **Please create a virtual environment and then run these commands**
+
 Run `git clone` on (this repo)
 Run the command below:
-> python3 -m pip install -r requirements.txt
+> pip install -r requirements.txt
 
 > CD into `code` directory where main.py and tkclient.py files are.
 * RUN `main.py` with `python3 main.py`

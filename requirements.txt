@@ -1,3 +1,5 @@
 rsa
 pytest
 argon2-cffi
+python-dotenv
+openai
