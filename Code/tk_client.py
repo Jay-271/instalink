@@ -8,6 +8,7 @@ import time
 import ast
 import rsa
 import os
+import platform 
 
 # Set up logging
 logging.basicConfig(
@@ -43,8 +44,11 @@ class ChatClientGUI:
     def __init__(self, master):
         script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the script's directory
         image_path = os.path.join(script_dir, "images", "Logo.png")
+        logo_path = os.path.join(script_dir, "images", "Logo_icon.png")
+        logo_img = PhotoImage(file=logo_path)
         
         self.master = master
+        self.master.iconphoto(False, logo_img)
         self.master.title("Instalink")
         self.master.geometry("925x500+300+200")
         self.master.configure(bg="#fff")
@@ -389,15 +393,16 @@ class ChatClientGUI:
         self.populate_chat_names()
         logging.info("Added specific chat buttons.")
         
-        ttk.Label(self.right_frame, text = "Create a new chat").grid(row=0, column=0, sticky=(tk.N,tk.E,tk.W))
+        Label(self.right_frame, text = f"Welcome {self.username}", fg='#ada1ff', font=('Microsoft YaHei UI Light', 23, 'bold')).grid(row=0, column=0, sticky=(tk.N,tk.E,tk.W))
+        ttk.Label(self.right_frame, text = "Create a new chat").grid(row=1, column=0, sticky=(tk.N,tk.E,tk.W))
         #Entry for create_chat_entry field        
         self.create_chat_entry = Entry(self.right_frame, width=25, fg='black', border=0, highlightthickness=0, bg="white", highlightbackground='white', font=('Microsoft YaHei UI Light', 11), insertbackground='black', insertwidth=2)
-        self.create_chat_entry.grid(row=1,column=0,sticky=(tk.N,tk.E))
+        self.create_chat_entry.grid(row=2,column=0,sticky=(tk.N,tk.E))
         self.create_chat_entry.insert(0, 'Enter User to search')
         self.create_chat_entry.bind('<FocusIn>', lambda e: self.create_chat_entry.delete(0, 'end'))
         self.create_chat_entry.bind('<FocusOut>', lambda e: self.create_chat_entry.insert(0, 'Username') if self.create_chat_entry.get() == '' else None)
         self.create_chat_button = ttk.Button(self.right_frame, text="Create Chat", command=lambda:self.create_new_chat())
-        self.create_chat_button.grid(row=2,column=0, sticky=(tk.N,tk.E))
+        self.create_chat_button.grid(row=3,column=0, sticky=(tk.N,tk.E))
     
     #if here then u clicked a button!! this clears GUi and sets up new GUi for chat area. this is all bare bones but everything shouldwork
     def init_dms(self, target): 
@@ -630,5 +635,8 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
+    if platform.system() not in ["Darwin", "Linux"]:  # Darwin = macOS. idk how to fix mac or linux icon but this is for windows icon.
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("instalink_app")
     main()
     
