@@ -477,7 +477,7 @@ class ChatClientGUI:
             self.create_chat_button.config(state='normal')
             return
         self.communicate(payload)
-        
+        time.sleep(.1)
         reply = self.client_socket.recv(1024).decode(FORMAT)
         if not reply or reply != "SUCCESS":
             self.create_chat_button.config(state='normal')
