@@ -149,10 +149,10 @@ def handle_client(conn, addr):
                         with database_lock:
                             utils.add_chat(username, target_user, msg)
                         try:
-                            if connected_clients[username]['chat_area']:
+                            if connected_clients[target_user]['chat_area']:
                                 utils.send_update_target(username, target_user, msg, connected_clients, APPEND_CHAT_AREA) #dont need otherwise since they get chat history automagically anyways at beginning of opening chat.
                         except Exception as e:
-                            print(f"User {username} not connected -> {e}")
+                            print(f"User {target_user} not connected -> {e}")
                         
                         if target_user == 'Chat':
                             original_response =  utils.to_gpt(msg, database_lock, username, target_user)
