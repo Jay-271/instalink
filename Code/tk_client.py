@@ -30,8 +30,8 @@ SEARCH = "!SEARCH"
 FORMAT = "utf-8"
 HEADER = 64
 
-HOST = socket.gethostbyname('35.237.170.18') #Server running vevrsion 11/19/24. Uncomment and comment line below to connect to the Cloud.
-#HOST = socket.gethostbyname(socket.gethostname())
+#HOST = socket.gethostbyname('35.237.170.18') #Server running vevrsion 11/19/24. Uncomment and comment line below to connect to the Cloud.
+HOST = socket.gethostbyname(socket.gethostname())
 PORT = 8000
 
 # Define the maximum message length (original was 1024)
@@ -140,6 +140,11 @@ class ChatClientGUI:
                     return
                 except Exception as e:
                     logging.error(f"Error closing socket (probably already closed from server): {e}")
+                    if hasattr(self, 'thrd_chat_area'):
+                        self.sending_message_event.clear()  # Signal thread to stop
+                        self.thrd_chat_area.join(timeout=1.0)  # Wait for thread to finish
+                    logging.info("Exiting...")
+                    self.master.destroy()
             else:
                 #No socket just kill it
                 self.master.destroy()
@@ -407,6 +412,7 @@ class ChatClientGUI:
     #if here then u clicked a button!! this clears GUi and sets up new GUi for chat area. this is all bare bones but everything shouldwork
     def init_dms(self, target): 
         self.state.append("messaging_someone")
+        self.currently_messaging = target
         # clear area
         self.sending_message_event = threading.Event() #handle breaking loop in thread
         self.sending_msg_event2 = threading.Event() # handle sending a message and sleeping other thread
@@ -420,22 +426,22 @@ class ChatClientGUI:
         self.right_frame.grid_remove()
 
         # Create the chat frame
-        self.chat_frame = ttk.Frame(self.main_frame, padding="10", relief="solid", borderwidth=1)
+        self.chat_frame = ttk.Frame(self.main_frame, padding="5", relief="solid")
         self.chat_frame.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
         # Add chat area
-        self.chat_area = scrolledtext.ScrolledText(self.chat_frame, wrap=tk.WORD, width=50, height=20)
-        self.chat_area.grid(column=0, row=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.chat_area = scrolledtext.ScrolledText(self.chat_frame, wrap=tk.WORD)
+        self.chat_area.grid(column=0, row=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         ttk.Label(self.chat_frame, text=f"To: {target}").grid(column=0, row=1, sticky=tk.W)
         #Get histroy (for that specific person)
         threading.Thread(target=self.handle_history, args=(target,), daemon=True).start()
         
         # Add message box
         self.message_entry = ttk.Entry(self.chat_frame, text="Message:", width=30)
-        self.message_entry.grid(column=0, row=2, columnspan=2, sticky=(tk.W, tk.E))
-        ttk.Button(self.chat_frame, text="Send", command=lambda: self.threadding_wrapper(self.send_message)).grid(column=1, row=3, sticky=tk.E)
+        self.message_entry.grid(column=0, row=2, sticky=(tk.W, tk.E))
+        ttk.Button(self.chat_frame, text="Send", command=lambda: self.threadding_wrapper(self.send_message)).grid(column=0, row=3, sticky=tk.E)
         
-        ttk.Button(self.chat_frame, text="Return", command=lambda: self.return_to_previous()).grid(column=1, row=5, sticky=tk.E)
+        ttk.Button(self.chat_frame, text="Return", command=lambda: self.return_to_previous()).grid(column=0, row=4, sticky=tk.E)
         # Configure grid stuff
         self.chat_frame.columnconfigure(0, weight=1)
         self.chat_frame.rowconfigure(0, weight=1)
@@ -545,6 +551,8 @@ class ChatClientGUI:
         time.sleep(.5) # Some weird race condition
         pattern = r'^!(.*?)~<>~\{(.*)$' #regex that CHECKS -> APPEND_CHAT_AREA
         self.client_socket.settimeout(1.0)
+        self.chat_area.tag_configure('right_align', justify='right')
+        self.chat_area.tag_configure('left_align', justify='left')
         
         buffer = ""
         while self.sending_message_event.is_set():
@@ -580,9 +588,18 @@ class ChatClientGUI:
                             buffer += part  # Add unmatched part back to buffer
                             continue
                         msg = match.group(2)
+                        
                         logging.info("INSERTING INTO chat area")
                         self.chat_area.config(state=tk.NORMAL)
-                        self.chat_area.insert(tk.END, f"{msg}\n")
+                        msg_parts = msg.split(": ")
+                        if self.username == msg_parts[0]:
+                            tag = 'right_align'
+                        elif self.currently_messaging == msg_parts[0]:
+                            tag = 'left_align'
+                        else:
+                            tag = tag
+                        rest_of_msg = "".join(msg_parts[1:len(msg_parts)])
+                        self.chat_area.insert(tk.END, f"{msg_parts[0]}\n{rest_of_msg}\n", tag)
                         self.chat_area.see(tk.END)
                         self.chat_area.config(state=tk.DISABLED)
                 except Exception as e:
@@ -618,9 +635,11 @@ class ChatClientGUI:
         logging.info("Finished sending message")
         #insert to canvas, server handles history itself
         self.sending_msg_event2.set()
-        self.chat_area.insert(tk.END, f"{self.username}: {message}\n")
+        self.chat_area.config(state=tk.NORMAL)
+        self.chat_area.insert(tk.END, f"{self.username}\n{message}\n", 'right_align')
         self.chat_area.see(tk.END)
         self.message_entry.delete(0, tk.END)
+        self.chat_area.config(state=tk.DISABLED)
         self.sending_msg_event2.clear()
 
     #if here called from button function just gets history from server
