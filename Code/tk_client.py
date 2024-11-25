@@ -500,8 +500,8 @@ class ChatClientGUI:
         
         self.respond = self.client_socket.recv(1024).decode(FORMAT)
     def handle_auth(self): #need to make this somehow loop forever until AUTH response is returned but for now just sleep 2
-        time.sleep(2)
-        if AUTH_RESPONSE in self.respond:
+        time.sleep(2.5)
+        if AUTH_RESPONSE is not None or AUTH_RESPONSE in self.respond:
             for widget in self.master.winfo_children():
                 widget.destroy()
             ### TODO This needs work:
@@ -581,8 +581,10 @@ class ChatClientGUI:
                             continue
                         msg = match.group(2)
                         logging.info("INSERTING INTO chat area")
+                        self.chat_area.config(state=tk.NORMAL)
                         self.chat_area.insert(tk.END, f"{msg}\n")
                         self.chat_area.see(tk.END)
+                        self.chat_area.config(state=tk.DISABLED)
                 except Exception as e:
                     logging.error(f"Incorrect message format: {e}")
                     break
