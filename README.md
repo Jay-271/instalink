@@ -6,7 +6,9 @@
 [Guide.md](guide/guide.md)
 
 
-# Main coding branch  **Please create a virtual environment and then run these commands**
+# **Please create a virtual environment and then run these commands**
+----
+
 ## TO RUN:
 
 Run `git clone` on (this repo)
